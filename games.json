@@ -1,0 +1,42 @@
+[
+  {
+    "name": "chanle",
+    "content": ["c", "l"],
+    "ratio": 2.31
+  },
+  {
+    "name": "taixiu",
+    "content": ["t", "x"],
+    "ratio": 2.31
+  },
+  {
+    "name": "chanle2",
+    "content": ["c2", "l2", "t2", "x2"],
+    "ratio": 1.96
+  },
+  {
+    "name": "gap3",
+    "content": ["g3"],
+    "ratio": 3
+  },
+  {
+    "name": "tong3so",
+    "content": ["s"],
+    "ratio": 3
+  },
+  {
+    "name": "1phan3",
+    "content": ["n1", "n2", "n3"],
+    "ratio": 3
+  },
+  {
+    "name": "xien",
+    "content": ["cx", "lt", "ct", "lx"],
+    "ratio": 3.3
+  },
+  {
+    "name": "doanso",
+    "content": ["d0", "d1", "d2", "d3", "d4", "d5", "d6", "d7", "d8", "d9"],
+    "ratio": 7
+  }
+]

@@ -1,0 +1,111 @@
+:root {
+    --primary-color: #17a2b8;
+    --second-color: #66bcca;
+    --btn-primary: #5bc0de;
+}
+
+html {
+    font-size: 14px;
+}
+
+body {
+    background-color: #e6e6e6;
+    font-family: Tahoma, Verdana, Geneva, sans-serif;
+}
+
+.btn-default {
+    color: #333;
+    background-color: #fff;
+    border-color: #ccc;
+}
+
+.bg-danger-1 {
+    background-color: #f8d7da;
+}
+
+.bg-danger-2 {
+    background-color: #f8d7daa3;
+}
+
+.fa-copy {
+    background-color: red;
+    padding: 3px 5px;
+    border-radius: 3px;
+    color: #fff;
+    cursor: pointer;
+}
+
+#header {
+    background-color: #17a2b8;
+    height: 60px;
+}
+
+#main>.top-banner {
+    height: 170px;
+    background: url(../img/bg-head.png) no-repeat top / cover;
+    background-color: #66bcca;
+    border-bottom: 10px solid #fff;
+}
+
+#main .content-wrap {
+    background-color: #fff;
+    margin-top: -52px;
+    border-radius: 5px;
+}
+
+#main .content-wrap .title-wrapper {
+    background: linear-gradient(to bottom, #e9e9e9 0%, #fff 100%);
+    border-radius: 5px;
+    margin: -10px -10px 0;
+    padding: 15px;
+    color: #6d2f0f;
+    min-height: 140px;
+}
+
+.tab-wrapper .nav-item {
+    margin-right: 5px;
+    margin-top: 5px;
+}
+
+.nav-pills .nav-link.active,
+.nav-pills .show>.nav-link {
+    background-color: var(--btn-primary);
+}
+
+#footer {
+    padding: 20px 0;
+    margin-top: 2em;
+    font-size: 12px;
+    background: #17a2b8;
+}
+
+@media (max-width: 576px) {
+    #main .content-wrap {
+        margin-top: 0;
+    }
+
+    #main .container {
+        padding-left: 0;
+        padding-right: 0;
+    }
+}
+
+
+@-webkit-keyframes blinker {
+    from {
+        opacity: 1.0;
+    }
+
+    to {
+        opacity: 0.0;
+    }
+}
+
+.blink {
+    animation-name: blinker;
+    animation-duration: 0.15s;
+    animation-iteration-count: infinite;
+    animation-timing-function: ease-in-out;
+    animation-direction: alternate;
+}
+
