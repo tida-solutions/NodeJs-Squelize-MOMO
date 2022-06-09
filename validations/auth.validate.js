@@ -4,7 +4,7 @@ const signin = () => [
   body("password").notEmpty().withMessage("Password is required"),
 ];
 
-module.exports = {
+module.exports = { 
   signin, 
 };
  

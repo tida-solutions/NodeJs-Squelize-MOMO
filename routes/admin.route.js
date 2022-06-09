@@ -1,48 +1,49 @@
 const Router = require("express").Router();
 const {
-  signin,
   viewHistoryPlay,
   viewHistoryReward,
   viewDashboard,
+  viewSetting,
   getPrice,
+  actionPhone,
+  viewPhone,
+  setting
 } = require("../controllers/admin.controller");
-const authValidate = require("../validations/auth.validate");
 const passport = require("passport");
-//require("../middlewares/authorization.middleware");
+require("../middlewares/authorization.middleware");
+const csrf = require("csurf");
+const csrfProtection = csrf({ cookie: true });
+const settingValidate = require("../validations/setting.validate");
+const checkLogin = require("../middlewares/checkLogin.middleware");
 
-/**
- * Signin
- */
-Router.get("/signin", (req, res) => {
-  res.render("admin/signin", {
-    csrfToken: req.csrfToken(),
-  });
-});
-
-Router.post("/signin", authValidate.signin(), signin);
 
 /**
  * Dashboard
  */
-Router.get(
-  "/dashboard",
-  viewDashboard
-  //   passport.authenticate("jwt", {
-  //     session: false,
-  //     failureRedirect: "/admin/signin",
-  //   }),
-);
+Router.get("/dashboard", csrfProtection, checkLogin, viewDashboard,);
 
 /**
  * History play
  */
-Router.get("/history", viewHistoryPlay);
+Router.get("/history-play", checkLogin, csrfProtection, viewHistoryPlay);
 
 /**
  * History reward
  */
-Router.get("/reward", viewHistoryReward);
+Router.get("/history-reward", checkLogin, csrfProtection, viewHistoryReward);
 
-Router.post("/price", getPrice);
+/**
+ * History refund
+ */
+
+Router.get("/setting", checkLogin, csrfProtection, viewSetting);
+
+Router.post("/price", csrfProtection, getPrice);
+
+Router.get("/manage-phone", checkLogin, csrfProtection, viewPhone);
+
+Router.post("/phone", csrfProtection, actionPhone)
+
+Router.post("/setting", passport.authenticate('jwt', { session: false }), csrfProtection, settingValidate(), setting)
 
 module.exports = Router;

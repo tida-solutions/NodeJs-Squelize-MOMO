@@ -1,0 +1,145 @@
+<%- include('header'); -%>
+    <!-- ============================================================== -->
+    <!-- Start right Content here -->
+    <!-- ============================================================== -->
+    <div class="main-content">
+        <div class="page-content">
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col-lg-12">
+                        <div id="resultData"></div>
+                        <div class="card">
+                            <div class="card-header">
+                                <h4 class="card-title mb-0">Setting</h4>
+                            </div><!-- end card header -->
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-sm">
+                                        <div class="d-flex justify-content-sm-start">
+                                            <div class="custom-control custom-switch">
+                                                <input type="checkbox" class="custom-control-input maintenance"
+                                                    id="customSwitch0" <%- setting?.maintenance==='on' ? 'checked' : ''
+                                                    %>>
+                                                <label class="custom-control-label" for="customSwitch0">Bảo trì</label>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col">
+                                                <div class="form-group">
+                                                    <label for="">Tiêu đề</label>
+                                                    <textarea name="" id=""  rows="3" class="form-control"></textarea>
+                                                </div>
+                                            </div>
+                                            <div class="col">
+                                                <div class="form-group">
+                                                    <label for="">Mô tả</label>
+                                                    <textarea name="" id=""  rows="3" class="form-control"></textarea>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="mb-3">
+                                                <label for="formFileSm" class="form-label">Logo</label>
+                                                <input class="form-control" id="formFileSm" type="file">
+                                            </div>
+                                        </div>
+                                        <div class="row mt-2">
+                                            <div class="col">
+                                                <div class="form-group">
+                                                    <label for="">Số tiền chơi ít nhất</label>
+                                                    <input type="number" class="form-control" id="minPlay"
+                                                        placeholder="Min Play" value="<%= setting?.minPlay  %>"
+                                                        required>
+                                                </div>
+                                            </div>
+                                            <div class="col">
+                                                <div class="form-group">
+                                                    <label for="">Số tiền chơi nhiều nhất</label>
+                                                    <input type="number" class="form-control" id="maxPlay"
+                                                        placeholder="Max Play" value="<%= setting?.maxPlay  %>"
+                                                        required>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="form-group mt-5">
+                                            <label for="">Notication</label>
+                                            <textarea id="notication" rows="4"
+                                                required><%= setting?.notification  %></textarea>
+                                        </div>
+                                        <div class="form-group mt-2">
+                                            <button class="btn btn-primary btn-save">Save</button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- end col -->
+                            </div>
+                            <!-- end col -->
+                        </div>
+                        <!-- end row -->
+                    </div>
+                    <!-- container-fluid -->
+                </div>
+                <!-- End Page-content -->
+            </div>
+        </div>
+    </div>
+    </div>
+    <%- include('footer') %>
+        <script src="https://cdn.ckeditor.com/ckeditor5/34.1.0/classic/ckeditor.js"></script>
+        <script>
+            const showAlert = (msg, type) => {
+                return `<div class="alert alert-${type}" role="alert">
+    <strong> ${msg} </strong>
+</div>`
+            }
+            let notification;
+            ClassicEditor.create(document.querySelector('#notication')).then((result) => {
+                notification = result;
+            })
+
+            function getCookie(cname) {
+                let name = cname + "=";
+                let ca = document.cookie.split(';');
+                for (let i = 0; i < ca.length; i++) {
+                    let c = ca[i];
+                    while (c.charAt(0) == ' ') {
+                        c = c.substring(1);
+                    }
+                    if (c.indexOf(name) == 0) {
+                        return c.substring(name.length, c.length);
+                    }
+                }
+                return "";
+            }
+
+            $('.btn-save').click(e => {
+                e.preventDefault()
+                const token = $('meta[name="csrf-token"]').attr('content')
+                $.ajax({
+                    url: '/admin/setting',
+                    headers: {
+                        'CSRF-Token': token,
+                        'Authorization': 'Bearer ' + getCookie('token')
+                    },
+                    method: 'POST',
+                    data: {
+                        minPlay: $('#minPlay').val(),
+                        maxPlay: $('#maxPlay').val(),
+                        notification: notification.getData(),
+                        maintenance: $('.maintenance').is(':checked')
+                    },
+                    success: res => {
+                        console.log(res);
+                        if (res.status) {
+                            $('#resultData').html(showAlert(res.msg, 'success'))
+                        } else {
+                            $('#resultData').html(showAlert(res.msg, 'danger'))
+                        }
+                    },
+                    error: err => {
+                        console.log(err);
+                        $('.result').html(showAlert('Something wentrong', 'danger'))
+                    }
+                })
+            })
+        </script>

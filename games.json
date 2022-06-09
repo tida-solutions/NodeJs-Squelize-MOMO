@@ -1,42 +1,110 @@
 [
   {
+    "nameDefault": "Chẵn lẻ",
     "name": "chanle",
-    "content": ["c", "l"],
+    "content": [
+      "c",
+      "l"
+    ],
     "ratio": 2.31
   },
   {
+    "nameDefault": "Tài xỉu",
     "name": "taixiu",
-    "content": ["t", "x"],
+    "content": [
+      "t",
+      "x"
+    ],
     "ratio": 2.31
   },
   {
+    "nameDefault": "Chẵn lẻ 2",
     "name": "chanle2",
-    "content": ["c2", "l2", "t2", "x2"],
+    "content": [
+      "c2",
+      "l2",
+      "t2",
+      "x2"
+    ],
     "ratio": 1.96
   },
   {
+    "nameDefault": "Gấp 3",
     "name": "gap3",
-    "content": ["g3"],
+    "content": [
+      "g3"
+    ],
     "ratio": 3
   },
   {
+    "nameDefault": "Tổng 3 số",
     "name": "tong3so",
-    "content": ["s"],
+    "content": [
+      "s"
+    ],
     "ratio": 3
   },
   {
+    "nameDefault": "1 phần 3",
     "name": "1phan3",
-    "content": ["n1", "n2", "n3"],
+    "content": [
+      "n1",
+      "n2",
+      "n3"
+    ],
     "ratio": 3
   },
   {
+    "nameDefault": "Xiên",
     "name": "xien",
-    "content": ["cx", "lt", "ct", "lx"],
+    "content": [
+      "cx",
+      "lt",
+      "ct",
+      "lx"
+    ],
     "ratio": 3.3
   },
   {
+    "nameDefault": "Đoán số",
     "name": "doanso",
-    "content": ["d0", "d1", "d2", "d3", "d4", "d5", "d6", "d7", "d8", "d9"],
+    "content": [
+      "d0",
+      "d1",
+      "d2",
+      "d3",
+      "d4",
+      "d5",
+      "d6",
+      "d7",
+      "d8",
+      "d9"
+    ],
     "ratio": 7
+  },
+  {
+    "nameDefault": "Âm dương",
+    "name": "amduong",
+    "content": [
+      "a",
+      "d"
+    ],
+    "ratio": 2.31
+  },
+  {
+    "nameDefault": "Liên",
+    "name": "lien",
+    "content": [
+      "li"
+    ],
+    "ratio": 3.5
+  },
+  {
+    "nameDefault": "1 Đôi",
+    "name": "motdoi",
+    "content": [
+      "1d"
+    ],
+    "ratio": 3.5
   }
 ]

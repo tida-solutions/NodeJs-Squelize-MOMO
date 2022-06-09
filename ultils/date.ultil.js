@@ -1,20 +1,26 @@
 const moment = require("moment");
 
+const getCurrentTime = () => {
+  return moment().format("YYYY-MM-DD HH:mm:ss")
+}
+
+
+console.log(getCurrentTime());
 /**
  * Get current date
  */
 const getCurrentDate = () => {
-  const today = new Date();
-  return moment(today,'YYYY MM DD').format("YYYY-MM-DD");
+  return moment().format("YYYY-MM-DD");
 };
 
 const getCurrentMonth = () => {
-  const today = new Date();
-  return moment(today.toDateString()).format("MM-YYYY");
+  return moment().format("MM-YYYY");
 };
 
+
 module.exports = {
-  getCurrentDate,
+  getCurrentTime,
   getCurrentMonth,
+  getCurrentDate
 };
-  
+ 

@@ -10,10 +10,13 @@ const getId = (transId, length) => {
  */
 const checkChanle = (transId, comment) => {
   const id = getId(transId, 1);
-  if ((comment === "c" && id % 2 === 1) || (comment === "l" && id % 2 === 0))
-    return false;
-  return process.env.CHANLE;
+  const c = [2, 4, 6, 8];
+  const l = [1, 3, 5, 7];
+  if ((comment === "c" && c.includes(id)) || (comment === "l" && l.includes(id)))
+    return process.env.CHANLE;
+  return false;
 };
+
 
 /**
  * Check tai xiu
@@ -144,6 +147,36 @@ const checkDoanSo = (transId, comment) => {
 };
 
 /**
+ * Check am duong
+ */
+const checkAmDuong = (transId, comment) => {
+  const id = getId(transId, 2);
+  const result = String(id).split('').reduce((a, b) => parseInt(a) - parseInt(b));
+  if (comment === 'a' && result < 0 || comment === 'd' && result >= 0) return process.env.AMDUONG;
+  return false;
+}
+
+/**
+ * Check lien
+ */
+const checkLien = (transId, comment) => {
+  const id = getId(transId, 3);
+  const lien = [012, 123, 234, 345, 456, 567, 678, 789];
+  if (lien.includes(id)) return process.env.LIEN;
+  return false;
+}
+
+/**
+ * Check 1 doi
+ */
+const check1Doi = (transId, comment) => {
+  const id = getId(transId, 2);
+  const doi = [00,11,22,33,44,55,66,77,88,99];
+  if (doi.includes(id)) return process.env.MOTDOI;
+  return false;
+} 
+
+/**
  * Check orther
  */
 const checkOther = (transId, comment) => {
@@ -160,4 +193,7 @@ module.exports = {
   checkXien,
   checkDoanSo,
   checkOther,
+  checkAmDuong,
+  checkLien,
+  check1Doi,
 };

@@ -11,31 +11,20 @@ const rateLimit = require("express-rate-limit");
 const adminRoute = require("./routes/admin.route");
 const homeRoute = require("./routes/home.route");
 const topRoute = require("./routes/top.route");
-const csrfProtection = csrf({ cookie: true });
-const passport = require("passport");
-const path = require("path");
-
-require('./controllers/home.controller');
+const authRoute = require("./routes/auth.route");
+const cors = require("cors");
 
 
-process.env.TZ = "UTC +7";
+process.env.TZ = "Asia/Ho_Chi_Minh";
 
-
-console.log(new Date());
-
+app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static("public"));
 //app.use(helmet());
 app.use(cookieParser());
-// app.set('views', path.join(__dirname, 'views'));
 app.set("view engine", "ejs");
 connectDB();
-
-/**
- * Anti csfr
- */
-app.use(csrfProtection);
 
 /**
  * Rate limit request
@@ -47,6 +36,7 @@ app.use(
     handler: (req, res) => {
       return res.json({
         status: false,
+        msg: 'Too many requests from this IP, please try again later',
         errors: [
           {
             msg: "Too many requests",
@@ -57,19 +47,14 @@ app.use(
     },
   })
 );
-
+ 
 /**
  * Routers
  */
 app.use("/admin", adminRoute);
 app.use("/", homeRoute);
 app.use("/admin/top", topRoute);
-
-/**
- * Passport
- */
-// app.use(passport.initialize());
-// app.use(passport.session());
+app.use("/auth", authRoute);
 
 /**
  * Run server

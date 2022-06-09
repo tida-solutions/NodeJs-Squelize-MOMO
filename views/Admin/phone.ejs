@@ -1,0 +1,126 @@
+<%- include('header'); -%>
+    <div class="container-fluid">
+
+        <!-- Page Heading -->
+        <div class="card shadow mb-4">
+
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered text-center" id="dataTable" width="100%" cellspacing="0">
+                        <thead>
+                            <tr>
+                                <th>Số thứ tự</th>
+                                <th>Số điện thoại</th>
+                                <th>Số tiền</th>
+                                <th>Số lần chuyển hôm nay</th>
+                                <th>Số lần nhận hôm nay</th>
+                                <th>Tổng chuyển hôm nay</th>
+                                <th>Tổng nhận hôm nay</th>
+                                <th>Tổng chuyển tháng này</th>
+                                <th>Tổng nhận tháng này</th>
+                                <th>Lợi nhuận hôm nay</th>
+                                <th>Lợi nhuận tháng này</th>
+                                <th>Ẩn hiện</th>
+                            </tr>
+                        </thead>
+                        <tfoot>
+                            <tr>
+                                <th>Số thứ tự</th>
+                                <th>Số điện thoại</th>
+                                <th>Số tiền</th>
+                                <th>Số lần chuyển hôm nay</th>
+                                <th>Số lần nhận hôm nay</th>
+                                <th>Tổng chuyển hôm nay</th>
+                                <th>Tổng nhận hôm nay</th>
+                                <th>Tổng chuyển tháng này</th>
+                                <th>Tổng nhận tháng này</th>
+                                <th>Lợi nhuận hôm nay</th>
+                                <th>Lợi nhuận tháng này</th>
+                                <th>Ẩn hiện</th>
+                            </tr>
+                        </tfoot>
+                        <tbody>
+                            <% list.forEach((item,index)=> { %>
+                                <tr>
+                                    <td>
+                                        <%= ++index %>
+                                    </td>
+                                    <td>
+                                        <%= item.phone %>
+                                    </td>
+                                    <td>
+                                        <%= (Intl.NumberFormat().format(item.amount)).replaceAll(',','.') %>
+                                    </td>
+                                    <td>
+                                        <%= (Intl.NumberFormat().format(item.countSendDay)).replaceAll(',','.') %>
+                                    </td>
+                                    <td>
+                                        <%= (Intl.NumberFormat().format(item.countReceiveDay)).replaceAll(',','.') %>
+                                    </td>
+                                    <td>
+                                        <%= (Intl.NumberFormat().format(item.totalSendDay)).replaceAll(',','.') %>
+                                    </td>
+                                    <td>
+                                        <%= (Intl.NumberFormat().format(item.totalReceiveDay)).replaceAll(',','.') %>
+                                    </td>
+                                    <td>
+                                        <%= (Intl.NumberFormat().format(item.totalSendMonth)).replaceAll(',','.') %>
+                                    </td>
+                                    <td>
+                                        <%= (Intl.NumberFormat().format(item.totalReceiveMonth)).replaceAll(',','.') %>
+                                    </td>
+                                    <td>
+                                        <%= item.totalReceiveDay - item.totalSendDay>= 0 ? `+${
+                                            (Intl.NumberFormat().format(item.totalReceiveDay -
+                                            item.totalSendDay)).replaceAll(',','.')}` : `${
+                                            (Intl.NumberFormat().format(item.totalReceiveDay -
+                                            item.totalSendDay)).replaceAll(',','.')}` %>
+                                    </td>
+                                    <td>
+                                        <%= item.totalReceiveMonth - item.totalSendMonth>= 0 ? `+${
+                                            (Intl.NumberFormat().format(item.totalReceiveMonth -
+                                            item.totalSendMonth)).replaceAll(',','.')}` : `${
+                                            (Intl.NumberFormat().format(item.totalReceiveMonth -
+                                            item.totalSendMonth)).replaceAll(',','.')}` %>
+                                    </td>
+                                    <td>
+                                        <div class="custom-control custom-switch">
+                                            <input type="checkbox" class="custom-control-input actionPhone"
+                                                id="customSwitch<%= ++index %>" data-phone="<%= item.phone %>"
+                                                <%=item.isShow==1 ? 'checked' : '' %>>
+                                            <label class="custom-control-label" for="customSwitch<%= index %>"></label>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <% }) %>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- /.container-fluid -->
+    </div>
+    <%- include('footer') %>
+        <script>
+            $('.actionPhone').on('change', (e) => {
+                var phone = e.target.getAttribute('data-phone');
+                const token = $('meta[name="csrf-token"]').attr('content')
+                const apiUrl = '/admin/phone'
+                const isChecked = e.target.checked || false
+                $.ajax({
+                    url: apiUrl,
+                    headers: {
+                        'CSRF-Token': token
+                    },
+                    type: 'POST',
+                    data: {
+                        phone,
+                        isShow: isChecked
+                    },
+                    success: function (data) {
+
+                    }
+                })
+            });
+        </script>

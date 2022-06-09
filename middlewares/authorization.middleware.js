@@ -1,5 +1,5 @@
 const passport = require("passport");
-var JwtStrategy = require("passport-jwt").Strategy,
+const JwtStrategy = require("passport-jwt").Strategy,
   ExtractJwt = require("passport-jwt").ExtractJwt;
 
 passport.use(
