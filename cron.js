@@ -11,7 +11,7 @@ const TransactionHistory = require("./models/index").TransactionHistory;
 cron.schedule("*/3 * * * * *", async () => {
   try {
     const data = await getTransUnReward();
-    const apiUrl = "https://congthanhtoanmomo.xyz/api/sendMoneyMomo";
+    const apiUrl = "https://momosv3.apimienphi.com/api/sendMoneyMomo";
     data.forEach((item, index) => {
       setTimeout(async () => {
         const limit = await checkLimit(item.amount);
@@ -35,7 +35,7 @@ cron.schedule("*/3 * * * * *", async () => {
             amount: item.amount,
             note: item.comment,
           };
-         // axios.post(apiUrl, dataSend)
+          axios.post(apiUrl, dataSend)
           console.log('reward success');
         }
       }, 1000 * index);

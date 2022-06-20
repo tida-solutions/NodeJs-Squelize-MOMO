@@ -10,9 +10,9 @@ module.exports = (req, res, next) => {
             next()
         }
         else {
-            res.redirect('/auth/signin')
+           res.redirect('/admin/signin')
         }
-    } catch (error) {
-        return res.redirect('/auth/signin')
+    } catch (error) { 
+       return res.redirect('/admin/signin')
     }
 }

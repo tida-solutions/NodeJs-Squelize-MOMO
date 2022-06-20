@@ -1,7 +1,9 @@
 <%- include('header'); -%>
     <div class="container-fluid">
-        <div class="row">
-
+        <div class="row justify-content-end">
+            <div class="col-3"><input type="date" name="" class="form-control" width="100px" id="search"></div>
+        </div>
+        <div class="row mt-5">
             <!-- Earnings (Monthly) Card Example -->
             <div class="col-xl-3 col-md-6 mb-4">
                 <div class="card border-left-primary shadow h-100 py-2">
@@ -10,7 +12,7 @@
                             <div class="col mr-2">
                                 <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
                                     Doanh thu hôm nay</div>
-                                <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                <div class="h5 mb-0 font-weight-bold text-gray-800" id="todayRevenue">
                                     <%= (Intl.NumberFormat().format(dayRevenue)).replaceAll(',','.') %> vnđ
                                 </div>
                             </div>
@@ -30,8 +32,8 @@
                             <div class="col mr-2">
                                 <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
                                     Lợi nhuận hôm nay</div>
-                                <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                    <%= (Intl.NumberFormat().format(dayRevenue - costDay)).replaceAll(',','.')  %> vnđ
+                                <div class="h5 mb-0 font-weight-bold text-gray-800" id="totalDay">
+                                    <%= (Intl.NumberFormat().format(dayRevenue - costDay)).replaceAll(',','.') %> vnđ
                                 </div>
                             </div>
                             <div class="col-auto">
@@ -52,8 +54,8 @@
                                 </div>
                                 <div class="row no-gutters align-items-center">
                                     <div class="col-auto">
-                                        <div class="h5 mb-0 mr-3 font-weight-bold text-gray-800">
-                                            <%= (Intl.NumberFormat().format(monthRevenue)).replaceAll(',','.')  %> vnđ
+                                        <div class="h5 mb-0 mr-3 font-weight-bold text-gray-800" id="monthRevenue">
+                                            <%= (Intl.NumberFormat().format(monthRevenue)).replaceAll(',','.') %> vnđ
                                         </div>
                                     </div>
                                 </div>
@@ -74,8 +76,9 @@
                             <div class="col mr-2">
                                 <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
                                     Lợi nhuận tháng này</div>
-                                <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                    <%= (Intl.NumberFormat().format(monthRevenue - costMonth)).replaceAll(',','.')  %>
+                                <div class="h5 mb-0 font-weight-bold text-gray-800" id="totalMonth">
+                                    <%= (Intl.NumberFormat().format(monthRevenue - costMonth)).replaceAll(',','.') %>
+                                        vnđ
                                 </div>
                             </div>
                             <div class="col-auto">
@@ -92,42 +95,51 @@
     <!-- /.container-fluid -->
 
     </div>
-    <script>
-
-        $('#search').change(() => {
-            const date = $('#search').val().trim();
-            const token = $('meta[name="csrf-token"]').attr('content')
-            const apiUrl = '/admin/price'
-
-            $.ajax({
-                url: apiUrl,
-                headers: {
-                    'CSRF-Token': token
-                },
-                method: 'POST',
-                data: {
-                    date
-                },
-                success: (data) => {
-                    const { dayRevenue,
-                        costDay,
-                        monthRevenue,
-                        costMonth, } = data
-                    console.log(data);
-                    $('#todayRevenue').html(` ${Intl.NumberFormat().format(dayRevenue)}`)
-                    $('#costDay').html(` ${Intl.NumberFormat().format(costDay)}`)
-                    $('#totalDay').html(`<i
-                                                            class="${dayRevenue - costDay >= 0 ? 'ri-arrow-right-up-line' : 'ri-arrow-right-down-line'}  fs-13 align-middle"></i> ${Intl.NumberFormat().format(dayRevenue - costDay)} đ`)
-                        .addClass(dayRevenue - costDay >= 0 ? 'text-success' : 'text-danger')
-                        .removeClass(dayRevenue - costDay >= 0 ? 'text-danger' : 'text-success')
-                    $('#monthRevenue').html(` ${Intl.NumberFormat().format(monthRevenue)}`)
-                    $('#costMonth').html(` ${Intl.NumberFormat().format(costMonth)}`)
-                    $('#totalMonth').html(`<i
-                                                            class="${monthRevenue - costMonth >= 0 ? 'ri-arrow-right-up-line' : 'ri-arrow-right-down-line'}  fs-13 align-middle"></i> ${Intl.NumberFormat().format(monthRevenue - costMonth)} đ`)
-                        .addClass(monthRevenue - costMonth >= 0 ? 'text-success' : 'text-danger')
-                        .removeClass(monthRevenue - costMonth >= 0 ? 'text-danger' : 'text-success')
+    <%- include('footer') %>
+        <script>
+            function getCookie(cname) {
+                let name = cname + "=";
+                let ca = document.cookie.split(';');
+                for (let i = 0; i < ca.length; i++) {
+                    let c = ca[i];
+                    while (c.charAt(0) == ' ') {
+                        c = c.substring(1);
+                    }
+                    if (c.indexOf(name) == 0) {
+                        return c.substring(name.length, c.length);
+                    }
                 }
-            })
-        })
+                return "";
+            }
 
-    </script>
+            $('#search').change(() => {
+                const date = $('#search').val().trim();
+                const token = $('meta[name="csrf-token"]').attr('content')
+                const apiUrl = '/admin/price'
+
+                $.ajax({
+                    url: apiUrl,
+                    headers: {
+                        'X-CSRF-TOKEN': token,
+                        'Authorization': 'Bearer ' + getCookie('token')
+                    },
+                    method: 'POST',
+                    data: {
+                        date
+                    },
+                    success: (data) => {
+                        const {
+                            dayRevenue,
+                            costDay,
+                            monthRevenue,
+                            costMonth
+                        } = data
+                        $('#todayRevenue').html(`${Intl.NumberFormat().format(dayRevenue).replaceAll(',', '.')} vnđ`)
+                        $('#totalDay').html(`${Intl.NumberFormat().format(dayRevenue - costDay).replaceAll(',', '.')} vnđ`)
+                        $('#monthRevenue').html(`${Intl.NumberFormat().format(monthRevenue).replaceAll(',', '.')} vnđ`)
+                        $('#totalMonth').html(`${Intl.NumberFormat().format(monthRevenue - costMonth).replaceAll(',', '.')} vnđ`)
+                    }
+                })
+            })
+
+        </script>

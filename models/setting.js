@@ -14,6 +14,9 @@ module.exports = (sequelize, DataTypes) => {
     }
   }
   Setting.init({
+    title: DataTypes.TEXT,
+    description: DataTypes.TEXT,
+    logo: DataTypes.STRING,
     maintenance: DataTypes.STRING,
     notification: DataTypes.TEXT,
     minPlay: DataTypes.INTEGER,

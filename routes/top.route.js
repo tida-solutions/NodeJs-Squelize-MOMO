@@ -1,7 +1,8 @@
 const Router = require("express").Router();
 const topValidate = require("../validations/top.validate");
 const checkLogin = require("../middlewares/checkLogin.middleware");
-
+const passport = require("passport");
+require("../middlewares/authorization.middleware");
 const {
   list,
   get,
@@ -12,14 +13,14 @@ const {
 const csrf = require("csurf");
 const csrfProtection = csrf({ cookie: true });
 
-Router.get("/",checkLogin,csrfProtection, list);
+Router.get("/", checkLogin, csrfProtection, list);
 
-Router.get("/:id",csrfProtection, get);
+Router.get("/:id", passport.authenticate('jwt', { session: false }), csrfProtection, get);
 
-Router.post("/", csrfProtection, topValidate(), create);
+Router.post("/", passport.authenticate('jwt', { session: false }), csrfProtection, topValidate(), create);
 
-Router.put("/:id", csrfProtection, topValidate(), update);
+Router.put("/:id", passport.authenticate('jwt', { session: false }), csrfProtection, topValidate(), update);
 
-Router.delete("/:id", csrfProtection, remove);
+Router.delete("/:id", passport.authenticate('jwt', { session: false }), csrfProtection, remove);
 
 module.exports = Router;

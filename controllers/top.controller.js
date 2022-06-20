@@ -3,13 +3,13 @@ const { getCurrentDate } = require("../ultils/date.ultil");
 const { validationResult } = require("express-validator");
 
 const list = async (req, res) => {
-  const data = await Top.findAll({
+  const list = await Top.findAll({
     where: {
       isDeleted: false,
     },
   });
   res.render("admin/top", {
-    data,
+    list,
     csrfToken: req.csrfToken(),
   });
 };
@@ -108,7 +108,7 @@ const update = async (req, res) => {
 
 const remove = async (req, res) => {
   try {
-    const data = {
+    const data = {   
       isDeleted: true,
       deletedAt: getCurrentDate(),
     };

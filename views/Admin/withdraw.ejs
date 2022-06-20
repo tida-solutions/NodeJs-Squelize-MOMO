@@ -1,0 +1,275 @@
+<%- include('header'); -%>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-5 mx-auto">
+                <div class="card shadow mb-4 mt-3">
+                    <div class="card-body">
+                        <div class="form-group">
+                            <label for="">Chọn số điện thoại cần rút tiền</label>
+                            <select name="phoneSend" id="" class="form-control">
+
+                            </select>
+                            <div class="form-group">
+                                <label for="">Số điện thoại nhận tiền</label>
+                                <input type="text" class="form-control" id="phoneReceiver"
+                                    placeholder="Số điện thoại nhận tiền">
+                            </div>
+                            <div class="form-group">
+                                <label for="">Số tiền rút</label>
+                                <input type="text" class="form-control" id="amount" placeholder="Số tiền rút">
+                            </div>
+                            <div class="form-group">
+                                <label for="Nội dung"></label>
+                                <textarea name="content" id="" rows="3" class="form-control" maxlength="50"
+                                placeholder="Nội dung"></textarea>
+                            </div>
+                            <button type="button" class="btn btn-primary" id="btnWithdraw">Rút tiền</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+    <%- include('footer') %>
+        <script>
+
+            function getCookie(cname) {
+                let name = cname + "=";
+                let ca = document.cookie.split(';');
+                for (let i = 0; i < ca.length; i++) {
+                    let c = ca[i];
+                    while (c.charAt(0) == ' ') {
+                        c = c.substring(1);
+                    }
+                    if (c.indexOf(name) == 0) {
+                        return c.substring(name.length, c.length);
+                    }
+                }
+                return "";
+            }
+
+            const getMsg = (data, param) => {
+                const msg = data.filter(item => {
+                    if (item.param == param) {
+                        return item.msg
+                    }
+                })
+                return msg.length > 0 ? msg[0].msg : ''
+            }
+
+            const showAlert = (msg, type) => {
+                return `<div class="alert alert-${type}" role="alert">
+             <strong> ${msg} </strong>
+                </div>`
+            }
+            const token = $('meta[name="csrf-token"]').attr('content')
+            const errPhone = $('#errPhone')
+            const errPrice = $('#errPrice')
+            const errGift = $('#errGift')
+
+            $('[data-toggle="modal"]').click(() => {
+                $('#edit-btn').text('Thêm').attr('id', 'add-btn').removeAttr('data-id')
+                $('#phone').val('')
+                $('#price').val('')
+                $('#gift').val('')
+            })
+
+            $('[data-dismiss="modal"]').click(() => {
+                errPhone.text('')
+                errPrice.text('')
+                errGift.text('')
+            })
+
+            $(document).on('click', '#add-btn', e => {
+                e.preventDefault()
+                const urlApi = '/admin/fake-top'
+                const phone = $('#phone').val().trim()
+                const price = $('#price').val().trim()
+                const gift = $('#gift').val().trim()
+                const result = $('#resultData')
+                $.ajax({
+                    url: urlApi,
+                    type: 'POST',
+                    headers: {
+                        'CSRF-Token': token,
+                        'Authorization': 'Bearer ' + getCookie('token')
+                    },
+                    data: {
+                        phone,
+                        price,
+                        gift
+                    },
+                    success: (res) => {
+                        if (res.status) {
+                            $('#createEditModal').modal('hide')
+                            Swal.fire({
+                                title: 'Thành công',
+                                text: 'Thêm thành công',
+                                type: 'success',
+                                showConfirmButton: false,
+                                timer: 2000
+                            }).then(() => {
+                                location.reload()
+                            })
+                        }
+                        else {
+                            errPhone.html(getMsg(res.errors, 'phone'))
+                            errPrice.html(getMsg(res.errors, 'price'))
+                            errGift.html(getMsg(res.errors, 'gift'))
+                        }
+                    },
+                    error: (err) => {
+                        console.log(err)
+                    }
+                })
+            })
+
+            $('.edit-item-btn').click((e) => {
+                const id = e.target.getAttribute('data-id')
+                const apiUrl = '/admin/fake-top/' + id
+                $('#add-btn').text('Sửa').attr('id', 'edit-btn')
+                $.ajax({
+                    url: apiUrl,
+                    type: 'GET',
+                    headers: {
+                        'CSRF-Token': token,
+                        'Authorization': 'Bearer ' + getCookie('token')
+                    },
+                    success: (res) => {
+                        if (res.status) {
+                            $('#edit-btn').attr('disabled', false)
+                            $('#createEditModal').modal('show')
+                            $('#phone').val(res.data.phone)
+                            $('#price').val(res.data.price)
+                            $('#gift').val(res.data.gift)
+                            $('#id').val(res.data.id)
+                            $('#edit-btn').attr('data-id', id)
+                        }
+                    },
+                    error: (err) => {
+                        $('#createEditModal').modal('hide')
+                        Swal.fire({
+                            title: 'Thất bại',
+                            text: 'Thêm thất bại',
+                            type: 'error',
+                            showConfirmButton: false,
+                            timer: 2000
+                        }).then(() => {
+                            location.reload()
+                        })
+                    }
+                })
+            })
+
+            $(document).on('click', '#edit-btn', e => {
+
+                const id = e.target.getAttribute('data-id')
+                const urlApi = '/admin/fake-top/' + id
+                const phone = $('#phone').val().trim()
+                const price = $('#price').val().trim()
+                const gift = $('#gift').val().trim()
+                const result = $('#resultData')
+
+                $.ajax({
+                    url: urlApi,
+                    type: 'PUT',
+                    headers: {
+                        'CSRF-Token': token,
+                        'Authorization': 'Bearer ' + getCookie('token')
+                    },
+                    data: {
+                        phone,
+                        price,
+                        gift
+                    },
+                    success: (res) => {
+                        if (res.status) {
+                            $('#createEditModal').modal('hide')
+                            Swal.fire({
+                                title: 'Thành công',
+                                text: 'Sửa thành công',
+                                type: 'success',
+                                showConfirmButton: false,
+                                timer: 2000
+                            }).then(() => {
+                                location.reload()
+                            })
+                        }
+                        else {
+                            errPhone.html(getMsg(res.errors, 'phone'))
+                            errPrice.html(getMsg(res.errors, 'price'))
+                            errGift.html(getMsg(res.errors, 'gift'))
+                        }
+                    },
+                    error: (err) => {
+                        $('#createEditModal').modal('hide')
+                        Swal.fire({
+                            title: 'Thất bại',
+                            text: 'Sửa thất bại',
+                            type: 'error',
+                            showConfirmButton: false,
+                            timer: 2000
+                        }).then(() => {
+                            location.reload()
+                        })
+                    }
+                })
+            })
+
+            $('.remove-item-btn').click(e => {
+                const id = e.target.getAttribute('data-id')
+                const urlApi = '/admin/fake-top/' + id
+                const result = $('#resultData')
+
+                $.ajax({
+                    url: urlApi,
+                    type: 'DELETE',
+                    headers: {
+                        'CSRF-Token': token,
+                        'Authorization': 'Bearer ' + getCookie('token')
+                    },
+                    success: (res) => {
+                        if (res.status) {
+                            Swal.fire({
+                                title: 'Thành công',
+                                text: 'Xóa thành công',
+                                type: 'success',
+                                showConfirmButton: false,
+                                timer: 2000
+                            }).then(() => {
+                                location.reload()
+                            })
+                        }
+                        else {
+                            Swal.fire({
+                                title: 'Thất bại',
+                                text: 'Xóa thất bại',
+                                type: 'error',
+                                showConfirmButton: false,
+                                timer: 2000
+                            }).then(() => {
+                                location.reload()
+                            })
+                        }
+                    },
+                    error: (err) => {
+                        Swal.fire({
+                            title: 'Thất bại',
+                            text: 'Xóa thất bại',
+                            type: 'error',
+                            showConfirmButton: false,
+                            timer: 2000
+                        }).then(() => {
+                            location.reload()
+                        })
+                    }
+                })
+            })
+
+            $('#create-btn').click(e => {
+                $('#edit-btn').attr('disabled', true)
+            })
+        </script>
+
+        </html>

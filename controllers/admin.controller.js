@@ -3,11 +3,14 @@ const { validationResult } = require("express-validator");
 const TransactionHistory = require("../models/index").TransactionHistory;
 const Phone = require("../models/index").Phone;
 const Sequelize = require("sequelize");
-const { getCurrentDate, getCurrentMonth, getCurrentTime } = require("../ultils/date.ultil");
+const { getCurrentDate, getCurrentMonth } = require("../ultils/date.ultil");
 const moment = require("moment");
-const { getListPhone } = require('../ultils/process.ultil');
 const Setting = require("../models/index").Setting;
-
+const axios = require("axios");
+const Promise = require("bluebird");
+const { handelRefund, countToday, totalMonth, getListPhone } = require("../ultils/process.ultil");
+const User = require("../models/index").User;
+const bcrypt = require('bcrypt');
 
 /**
  * View history play
@@ -41,27 +44,14 @@ const viewHistoryReward = async (req, res) => {
   });
 };
 
-const viewHistoryRefund = async (req, res) => {
-  const list = await TransactionHistory.findAll({
-    where: {
-      type: "refund",
-    },
-    order: [["id", "DESC"]],
-  });
-  return res.render("admin/refund", {
-    list,
-    csrfToken: req.csrfToken(),
-  });
-}
-
 /**
  * View dashboard
  */
 const viewDashboard = async (req, res) => {
-  const dayRevenue = await DayRevenue(getCurrentDate());
-  const costDay = await CostDay(getCurrentDate());
-  const monthRevenue = await MonthRevenue(getCurrentMonth());
-  const costMonth = await CostMonth(getCurrentMonth());
+  const dayRevenue = await DayRevenue(getCurrentDate(), 'receive');
+  const costDay = await DayRevenue(getCurrentDate(), 'send');
+  const monthRevenue = await MonthRevenue(getCurrentMonth(), 'receive');
+  const costMonth = await MonthRevenue(getCurrentMonth(), 'send');
   return res.render("admin/home", {
     dayRevenue,
     costDay,
@@ -95,7 +85,6 @@ const viewPhone = async (req, res) => {
   })
 }
 
-
 /**
  * Get list phone from api
  */
@@ -107,32 +96,46 @@ const updatePhones = async () => {
   })
   const phones = await getListPhone();
   const arrPhones = []
-  phones.forEach(async (phone) => {
+  phones||[].forEach(async (phone) => {
     arrPhones.push(phone.phone);
   })
-  const arrPhoneNotInData = phones.filter(phone => !arrPhoneInData.includes(phone.phone));
+  const arrPhoneNotInData = phones||[].filter(phone => !arrPhoneInData.includes(phone.phone));
+  const arrPhoneNotInApi = arrPhoneInData.filter(phone => !arrPhones.includes(phone));
+  if (arrPhoneNotInApi.length > 0) {
+    arrPhoneNotInApi.forEach(async (phone) => {
+      await Phone.destroy({
+        where: {
+          phone: phone
+        }
+      })
+    })
+  }
   if (arrPhoneNotInData.length > 0)
     return arrPhoneNotInData.forEach(async (phone) => {
+      const countDay = await countToday(phone.phone, 'send');
+      const receiveTody = await countToday(phone.phone, 'receive');
       return Phone.create({
         phone: phone.phone,
         amount: phone.balance,
-        countSendDay: phone.tonggdchuyen,
-        countReceiveDay: phone.tonggdnhan,
-        totalSendDay: phone.tongchuyentrongngay,
-        totalReceiveDay: phone.tongnhantrongngay,
+        countSendDay: countDay.totalCount || 0,
+        countReceiveDay: receiveTody.totalCount || 0, 
+        totalSendDay: countDay.totalAmount || 0,
+        totalReceiveDay: receiveTody.totalAmount || 0,
         totalSendMonth: 0,
         totalReceiveMonth: 0,
       })
     })
-  return phones.forEach(async (phone) => {
+  return phones||[].forEach(async (phone) => {
+    const countDay = await countToday(phone.phone, 'send');
+    const receiveTody = await countToday(phone.phone, 'receive');
     return Phone.update({
       amount: phone.balance,
-      countSendDay: phone.tonggdchuyen,
-      countReceiveDay: phone.tonggdnhan,
-      totalSendDay: phone.tongchuyentrongngay,
-      totalReceiveDay: phone.tongnhantrongngay,
-      totalSendMonth: await totalSendMonth((phone.phone).toString()),
-      totalReceiveMonth: await totalReceiveMonth((phone.phone).toString()),
+      countSendDay: countDay.totalCount || 0,
+      countReceiveDay: receiveTody.totalCount || 0,
+      totalSendDay: countDay.totalAmount || 0,
+      totalReceiveDay: receiveTody.totalAmount || 0,
+      totalSendMonth: await totalMonth((phone.phone).toString(), 'send'),
+      totalReceiveMonth: await totalMonth((phone.phone).toString(), 'receive'),
     },
       {
         where: {
@@ -142,6 +145,9 @@ const updatePhones = async () => {
   })
 }
 
+/**
+ * Show / Hidden phone
+ */
 const actionPhone = async (req, res) => {
   const { phone, isShow } = req.body;
 
@@ -153,38 +159,24 @@ const actionPhone = async (req, res) => {
     }
   })
 }
+
 /**
  * Get day revenue 
  */
-const DayRevenue = async (date) => {
+const DayRevenue = async (date, type) => {
   const data = await TransactionHistory.findAll({
     attributes: [[Sequelize.fn("sum", Sequelize.col("amount")), "totalAmount"]],
     where: {
-      [Sequelize.Op.not]: [
+      [Sequelize.Op.and]: [
         {
-          type: "reward",
+          [Sequelize.Op.and]: Sequelize.where(
+            Sequelize.fn("date", Sequelize.col("createdAt")),
+            date
+          ),
+          type: type === 'send' ? ["reward", "point"] : ["win", "lose"],
         },
-      ],
-      createdAt: {
-        [Sequelize.Op.between]: [date, `${date} 23:59:59`],
-      },
-    },
-  });
-  return data[0].dataValues.totalAmount || 0;
-};
-
-/**
- * Get cost day
- */
-const CostDay = async (date) => {
-  const data = await TransactionHistory.findAll({
-    attributes: [[Sequelize.fn("sum", Sequelize.col("amount")), "totalAmount"]],
-    where: {
-      type: "reward",
-      createdAt: {
-        [Sequelize.Op.between]: [date, `${date} 23:59:59`],
-      },
-    },
+      ]
+    }
   });
   return data[0].dataValues.totalAmount || 0;
 };
@@ -192,7 +184,7 @@ const CostDay = async (date) => {
 /**
  * Get month revenue
  */
-const MonthRevenue = async (date) => {
+const MonthRevenue = async (date, type) => {
   const data = await TransactionHistory.findAll({
     attributes: [[Sequelize.fn("sum", Sequelize.col("amount")), "totalAmount"]],
     where: {
@@ -202,88 +194,13 @@ const MonthRevenue = async (date) => {
             Sequelize.fn("month", Sequelize.col("createdAt")),
             date
           ),
-        },
-        {
-          [Sequelize.Op.not]: [
-            {
-              type: "reward",
-            },
-          ],
+          type: type === 'send' ? ["reward", "point"] : ["win", "lose"],
         },
       ],
     },
   });
   return data[0].dataValues.totalAmount || 0;
 };
-
-/**
- * Get cost month
- */
-const CostMonth = async (date) => {
-  const data = await TransactionHistory.findAll({
-    attributes: [[Sequelize.fn("sum", Sequelize.col("amount")), "totalAmount"]],
-    where: {
-      [Sequelize.Op.and]: [
-        {
-          [Sequelize.Op.and]: Sequelize.where(
-            Sequelize.fn("month", Sequelize.col("createdAt")),
-            date
-          ),
-        },
-        {
-          type: "reward",
-        },
-      ],
-    },
-  });
-  return data[0].dataValues.totalAmount || 0;
-};
-
-/**
- * Get total send month
- */
-const totalSendMonth = async (phone) => {
-  const data = await TransactionHistory.findAll({
-    attributes: [[Sequelize.fn("sum", Sequelize.col("amount")), "totalAmount"]],
-    where: {
-      [Sequelize.Op.and]: [
-        {
-          [Sequelize.Op.and]: Sequelize.where(
-            Sequelize.fn("month", Sequelize.col("createdAt")),
-            getCurrentMonth()
-          ),
-          type: ["reward", "refund"],
-          transferPhone: phone
-        },
-
-      ]
-    }
-  })
-  return data[0].dataValues.totalAmount || 0;
-}
-
-/**
- * Get total receive month
- */
-const totalReceiveMonth = async (phone) => {
-  const data = await TransactionHistory.findAll({
-    attributes: [[Sequelize.fn("sum", Sequelize.col("amount")), "totalAmount"]],
-    where: {
-      [Sequelize.Op.and]: [
-        {
-          [Sequelize.Op.and]: Sequelize.where(
-            Sequelize.fn("month", Sequelize.col("createdAt")),
-            getCurrentMonth()
-          ),
-          type: ["win", "lose", 'false'],
-          receivingPhone: phone
-        },
-
-      ]
-    }
-  })
-  return data[0].dataValues.totalAmount || 0;
-}
 
 /**
  * Get price by day
@@ -292,10 +209,10 @@ const getPrice = async (req, res) => {
   const { date } = req.body;
   const day = moment(moment(new Date(date))).format('YYYY-MM-DD');
   const month = moment(new Date(date)).format("MM-YYYY");
-  const dayRevenue = await DayRevenue(day);
-  const costDay = await CostDay(day);
-  const monthRevenue = await MonthRevenue(month);
-  const costMonth = await CostMonth(month);
+  const dayRevenue = await DayRevenue(day, 'receive');
+  const costDay = await DayRevenue(day, 'send');
+  const monthRevenue = await MonthRevenue(month, 'receive');
+  const costMonth = await MonthRevenue(month, 'send');
   return res.json({
     dayRevenue,
     costDay,
@@ -317,22 +234,19 @@ const setting = async (req, res) => {
       });
     }
 
-    const { maintenance, minPlay, maxPlay, notification } = req.body;
+    const dataRq = req.body;
     const data = await Setting.findAll();
+    delete dataRq.logo
     if (data.length === 0) {
       Setting.create({
-        maintenance: maintenance === 'true' ? 'on' : 'off',
-        minPlay,
-        maxPlay,
-        notification
+        logo: req.file?.filename || '',
+        ...dataRq,
       })
     }
     else {
       Setting.update({
-        maintenance: maintenance === 'true' ? 'on' : 'off',
-        minPlay,
-        maxPlay,
-        notification
+        logo: req.file?.filename || data[0].logo,
+        ...dataRq,
       },
         {
           where: {
@@ -346,23 +260,159 @@ const setting = async (req, res) => {
     })
 
   } catch (error) {
+    console.log(error);
     return res.json({
       status: false,
       msg: 'Update fail'
     })
   }
-
 }
 
+/**
+ * Get trans  false
+ */
+const getAllTransFalse = async () => {
+  const data = await TransactionHistory.findAll({
+    where: {
+      type: 'false'
+    },
+    order: [['id', 'DESC']]
+  })
+
+  const dataRS = Promise.all(data.map(async (item) => {
+    const checkId = await checkTranIdRefund(item.tradingCode);
+    if (!checkId) {
+      return item;
+    }
+  }))
+
+  return dataRS.map(item => item?.dataValues || null).filter(item => item !== null);
+}
+
+const checkTranIdRefund = async (tranId) => {
+  const data = await TransactionHistory.findAll({
+    where: {
+      tradingCode: tranId,
+      type: 'refund'
+    }
+  })
+  return data.length > 0 ? true : false
+}
+
+/**
+ * View transaction false
+ */
+
+const viewTransFalse = async (req, res) => {
+  const list = await getAllTransFalse();
+  return res.render('admin/history_false', {
+    csrfToken: req.csrfToken(),
+    list
+  })
+}
+
+/**
+ * Refund
+ */
+const refundTransFalse = async (req, res) => {
+  try {
+    const { arr } = req.body;
+    for (const item of arr) {
+      const checkId = await checkTranIdRefund(item);
+      if (!checkId) {
+        handelRefund(item);
+      }
+    }
+    return res.json({
+      status: true,
+      msg: 'Refund success'
+    })
+  } catch (error) {
+    console.log(error);
+    return res.json({
+      status: false,
+      msg: 'Refund fail'
+    })
+  }
+}
+
+/**
+ * View withdraw
+ */
+const viewWithdraw = async (req, res) => {
+  // const phones = await getListPhone();
+
+  return res.render('admin/withdraw', {
+    csrfToken: req.csrfToken(),
+    // phones
+  })
+}
+
+/**
+ * View change password
+ */
+const viewChangePassword = async (req, res) => {
+  return res.render('admin/change_password', {
+    csrfToken: req.csrfToken(),
+  })
+}
+
+/**
+ * Change password
+ */
+const changePassword = async (req, res) => {
+  try {
+    const { oldPass, newPass } = req.body;
+
+    const user = await User.findOne({
+      where: {
+        email: req.user.email
+      }
+    });
+
+    const isUser = await bcrypt.compare(oldPass, user.password);
+    if (!isUser) {
+      return res.json({
+        status: false,
+        msg: 'Old password is wrong'
+      })
+    }
+
+    User.update({
+      password: await bcrypt.hash(newPass, 10)
+    },
+      {
+        where: {
+          email: req.user.email
+        }
+      })
+    return res.json({
+      status: true,
+      msg: 'Change password success'
+    })
+  } catch (error) {
+    console.log(error);
+    return res.json({
+      status: false,
+      msg: 'Change password fail'
+    })
+  }
+}
 
 module.exports = {
   viewHistoryPlay,
   viewHistoryReward,
   viewDashboard,
-  viewHistoryRefund,
   getPrice,
   viewSetting,
   actionPhone,
   viewPhone,
-  setting
+  setting,
+  countToday,
+  totalMonth,
+  viewTransFalse,
+  refundTransFalse,
+  viewWithdraw,
+  viewChangePassword,
+  changePassword
 };

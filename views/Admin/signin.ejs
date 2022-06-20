@@ -124,7 +124,7 @@
         const errPassword = $('#errPassword')
         const result = $('#result-data')
         const token = $('meta[name="csrf-token"]').attr('content')
-        const apiUrl = '/auth/signin'
+        const apiUrl = '/admin/signin'
         $('.btn-signin').html('Loading...').attr('disabled', true)
         $.ajax({
             url: apiUrl,
@@ -144,7 +144,7 @@
                         $('.btn-signin').html('Login').attr('disabled', false)
                         result.text(res.msg).addClass('text-success').removeClass('text-danger')
                         document.cookie = `token=${res.token}`
-                        window.location.href = '/admin/dashboard'
+                        window.location.href = 'dashboard'
                     }, 1000);
                 }
                 else {

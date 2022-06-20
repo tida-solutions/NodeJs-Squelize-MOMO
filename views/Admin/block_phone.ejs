@@ -1,0 +1,297 @@
+<%- include('header'); -%>
+    <div class="container-fluid">
+        <!-- Page Heading -->
+        <button class="btn btn-primary" data-toggle="modal" data-target="#createEditModal">Thêm</button>
+        <div class="card shadow mb-4 mt-3">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered text-center" id="dataTable" width="100%" cellspacing="0">
+                        <thead>
+                            <tr>
+                                <th>Top</th>
+                                <th>Số điện thoại</th>
+                                <th>Hành động</th>
+                            </tr>
+                        </thead>
+                        <tfoot>
+                            <tr>
+                                <th>Top</th>
+                                <th>Số điện thoại</th>
+                                <th>Hành động</th>
+                            </tr>
+                        </tfoot>
+                        <tbody>
+                            <% list.forEach((item,index)=> { %>
+                                <tr>
+                                    <td>
+                                        <%= ++index %>
+                                    </td>
+                                    <td>
+                                        <%= item.phone %>
+                                    </td>
+                                    <td>
+                                        <div class="row">
+                                            <div class="col"><i class="fa fa-pen edit-item-btn"
+                                                    data-id="<%= item.id %>"></i></div>
+                                            <div class="col"><i class="fa fa-trash remove-item-btn"
+                                                    data-id="<%= item.id %>"></i></div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <% }) %>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- /.container-fluid -->
+    <!-- Modal -->
+    <div class="modal fade" id="createEditModal" tabindex="-1" role="dialog" aria-labelledby="createEditModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="createEditModalLabel">Thêm / Sửa</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="">Số điện thoại</label>
+                        <input type="number" class="form-control" id="phone">
+                        <span class="text-danger" id="errPhone"></span>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" id="add-btn">Lưu</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+    <%- include('footer') %>
+        <script>
+
+            function getCookie(cname) {
+                let name = cname + "=";
+                let ca = document.cookie.split(';');
+                for (let i = 0; i < ca.length; i++) {
+                    let c = ca[i];
+                    while (c.charAt(0) == ' ') {
+                        c = c.substring(1);
+                    }
+                    if (c.indexOf(name) == 0) {
+                        return c.substring(name.length, c.length);
+                    }
+                }
+                return "";
+            }
+
+            const getMsg = (data, param) => {
+                const msg = data.filter(item => {
+                    if (item.param == param) {
+                        return item.msg
+                    }
+                })
+                return msg.length > 0 ? msg[0].msg : ''
+            }
+
+            const showAlert = (msg, type) => {
+                return `<div class="alert alert-${type}" role="alert">
+             <strong> ${msg} </strong>
+                </div>`
+            }
+            const token = $('meta[name="csrf-token"]').attr('content')
+            const errPhone = $('#errPhone')
+
+            $('[data-toggle="modal"]').click(() => {
+                $('#edit-btn').text('Thêm').attr('id', 'add-btn').removeAttr('data-id')
+                $('#phone').val('')
+            })
+
+            $('[data-dismiss="modal"]').click(() => {
+                errPhone.text('')
+            })
+
+            $(document).on('click', '#add-btn', e => {
+                e.preventDefault()
+                const urlApi = '/admin/block-phone'
+                const phone = $('#phone').val().trim()
+                const result = $('#resultData')
+                $.ajax({
+                    url: urlApi,
+                    type: 'POST',
+                    headers: {
+                        'CSRF-Token': token,
+                        'Authorization': 'Bearer ' + getCookie('token')
+                    },
+                    data: {
+                        phone,
+                    },
+                    success: (res) => {
+                        console.log(res);
+                        if (res.status) {
+                            $('#createEditModal').modal('hide')
+                            
+                            Swal.fire({
+                                title: 'Thành công',
+                                text: 'Thêm thành công',
+                                type: 'success',
+                                showConfirmButton: false,
+                                timer: 2000
+                            }).then(() => {
+                                location.reload()
+                            })
+                        }
+                        else {
+                            errPhone.html(getMsg(res.errors, 'phone'))
+                        }
+                    },
+                    error: (err) => {
+                        console.log(err)
+                    }
+                })
+            })
+
+            $('.edit-item-btn').click((e) => {
+                const id = e.target.getAttribute('data-id')
+                const apiUrl = '/admin/block-phone/' + id
+                $('#add-btn').text('Sửa').attr('id', 'edit-btn')
+                $.ajax({
+                    url: apiUrl,
+                    type: 'GET',
+                    headers: {
+                        'CSRF-Token': token,
+                        'Authorization': 'Bearer ' + getCookie('token')
+                    },
+                    success: (res) => {
+                        if (res.status) {
+                            $('#edit-btn').attr('disabled', false)
+                            $('#createEditModal').modal('show')
+                            $('#phone').val(res.data.phone)
+                            $('#id').val(res.data.id)
+                            $('#edit-btn').attr('data-id', id)
+                        }
+                    },
+                    error: (err) => {
+                        $('#createEditModal').modal('hide')
+                        Swal.fire({
+                            title: 'Thất bại',
+                            text: 'Thêm thất bại',
+                            type: 'error',
+                            showConfirmButton: false,
+                            timer: 2000
+                        }).then(() => {
+                            location.reload()
+                        })
+                    }
+                })
+            })
+
+            $(document).on('click', '#edit-btn', e => {
+
+                const id = e.target.getAttribute('data-id')
+                const urlApi = '/admin/block-phone/' + id
+                const phone = $('#phone').val().trim()
+                const result = $('#resultData')
+
+                $.ajax({
+                    url: urlApi,
+                    type: 'PUT',
+                    headers: {
+                        'CSRF-Token': token,
+                        'Authorization': 'Bearer ' + getCookie('token')
+                    },
+                    data: {
+                        phone,
+                    },
+                    success: (res) => {
+                        if (res.status) {
+                            $('#createEditModal').modal('hide')
+                            Swal.fire({
+                                title: 'Thành công',
+                                text: 'Sửa thành công',
+                                type: 'success',
+                                showConfirmButton: false,
+                                timer: 2000
+                            }).then(() => {
+                                location.reload()
+                            })
+                        }
+                        else {
+                            errPhone.html(getMsg(res.errors, 'phone'))
+                        }
+                    },
+                    error: (err) => {
+                        $('#createEditModal').modal('hide')
+                        Swal.fire({
+                            title: 'Thất bại',
+                            text: 'Sửa thất bại',
+                            type: 'error',
+                            showConfirmButton: false,
+                            timer: 2000
+                        }).then(() => {
+                            location.reload()
+                        })
+                    }
+                })
+            })
+
+            $('.remove-item-btn').click(e => {
+                const id = e.target.getAttribute('data-id')
+                const urlApi = '/admin/block-phone/' + id
+                const result = $('#resultData')
+
+                $.ajax({
+                    url: urlApi,
+                    type: 'DELETE',
+                    headers: {
+                        'CSRF-Token': token,
+                        'Authorization': 'Bearer ' + getCookie('token')
+                    },
+                    success: (res) => {
+                        if (res.status) {
+                            Swal.fire({
+                                title: 'Thành công',
+                                text: 'Xóa thành công',
+                                type: 'success',
+                                showConfirmButton: false,
+                                timer: 2000
+                            }).then(() => {
+                                location.reload()
+                            })
+                        }
+                        else {
+                            Swal.fire({
+                                title: 'Thất bại',
+                                text: 'Xóa thất bại',
+                                type: 'error',
+                                showConfirmButton: false,
+                                timer: 2000
+                            }).then(() => {
+                                location.reload()
+                            })
+                        }
+                    },
+                    error: (err) => {
+                        Swal.fire({
+                            title: 'Thất bại',
+                            text: 'Xóa thất bại',
+                            type: 'error',
+                            showConfirmButton: false,
+                            timer: 2000
+                        }).then(() => {
+                            location.reload()
+                        })
+                    }
+                })
+            })
+
+            $('#create-btn').click(e => {
+                $('#edit-btn').attr('disabled', true)
+            })
+        </script>
+
+        </html>

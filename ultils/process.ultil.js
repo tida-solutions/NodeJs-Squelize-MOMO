@@ -1,6 +1,6 @@
 var Sequelize = require("sequelize");
 const Promise = require("bluebird");
-const { getCurrentDate, getCurrentTime } = require("../ultils/date.ultil");
+const { getCurrentDate, getCurrentTime, getCurrentMonth } = require("../ultils/date.ultil");
 const games = require("../games.json");
 const axios = require("axios");
 const {
@@ -22,6 +22,7 @@ const TransactionHistory = require("../models/index").TransactionHistory;
 const Setting = require("../models/index").Setting;
 const PointList = require("../models/index").PointList;
 const landMark = require('../landmark')
+
 /**
  * Get data from api
  */
@@ -190,22 +191,40 @@ const saveHistory = (data) => {
 
 const getListPhone = async () => {
   try {
-    const apiUrl = "https://congthanhtoanmomo.xyz/api/getMomoInfo";
+    const apiUrl = "https://momosv3.apimienphi.com/api/getMomoInfo";
     const access_token = process.env.ACCESS_TOKEN;
     const listPhone = await axios.post(apiUrl, { access_token });
-    return listPhone.data.data;
+    let data = await Promise.all(
+      listPhone.data.data.map(async (phone) => {
+        return {
+          phone: phone.phone,
+          balance: phone.balance,
+          countToday: await countToday(phone.phone, 'send'),
+          countMonth: await totalMonth(phone.phone, 'send'),
+        }
+      }))
+    data = data.length > 0 ? data : null
+    return data.filter((phone) => phone !== null);
   } catch (error) {
     console.log(error);
   }
 };
 
 /**
- * Check limit phone and swap phone
+ * Check limit phone and swap phone  
  */
 const checkLimit = async (money) => {
   const listPhone = await getListPhone();
-  const data = listPhone.filter(item => item.tonggdchuyen <= 140 && item.tongchuyentrongngay <= 40000000 && item.balance >= money);
-  data.sort((a, b) => {
+  const data = listPhone.filter(item => {
+    const { balance, countToday, countMonth } = item;
+    return balance >= money
+      && countToday.totalCount < 140
+      && countToday.totalAmount < 40000000
+      && countMonth < 80000000
+  }
+  );
+
+  data.sort((a, b) => { 
     return b.balance - a.balance;
   });
   return data.length > 0 ? data[0] : false;
@@ -246,7 +265,7 @@ const getTransUnReward = async () => {
 }
 
 const checkTranId = async (tranId) => {
-  const apiUrl = 'https://congthanhtoanmomo.xyz/api/checkTranId'
+  const apiUrl = 'https://momosv3.apimienphi.com/api/checkTranId'
   const access_token = process.env.ACCESS_TOKEN
   const data = {
     access_token,
@@ -259,7 +278,7 @@ const checkTranId = async (tranId) => {
 
 
 const getDataTranId = async (tranId) => {
-  const apiUrl = 'https://congthanhtoanmomo.xyz/api/checkTranId'
+  const apiUrl = 'https://momosv3.apimienphi.com/api/checkTranId'
   const access_token = process.env.ACCESS_TOKEN
   const data = {
     access_token,
@@ -271,27 +290,32 @@ const getDataTranId = async (tranId) => {
 }
 
 const handelRefund = async (tranId) => {
-  const data = await getDataTranId(tranId)
-  const limit = await checkLimit(data.amount)
-  const apiUrl = "https://congthanhtoanmomo.xyz/api/sendMoneyMomo";
-  if (limit) {
-    saveHistory({
-      receivingPhone: data.partnerId,
-      transferPhone: limit.phone,
-      tradingCode: tranId,
-      type: "refund",
-      amount: data.amount,
-      comment: `${tranId} | Refund`,
-    })
-    const dataSend = {
-      access_token: process.env.ACCESS_TOKEN,
-      phone: limit.phone,
-      phoneto: data.partnerId,
-      amount: data.amount,
-      note: `${tranId} | Refund`,
-    };
-    axios.post(apiUrl, dataSend)
+  try {
+    const data = await getDataTranId(tranId)
+    const limit = await checkLimit(data.amount)
+    const apiUrl = "https://momosv3.apimienphi.com/api/sendMoneyMomo";
+    if (limit) {
+      saveHistory({
+        receivingPhone: data.partnerId,
+        transferPhone: limit.phone,
+        tradingCode: tranId,
+        type: "refund",
+        amount: data.amount,
+        comment: `${tranId} | Refund`,
+      })
+      const dataSend = {
+        access_token: process.env.ACCESS_TOKEN,
+        phone: limit.phone,
+        phoneto: data.partnerId,
+        amount: data.amount,
+        note: `${tranId} | Refund`,
+      };
+      axios.post(apiUrl, dataSend)
+    }
+  } catch (error) {
+    console.log(error);
   }
+
 }
 
 const allTransWin = async () => {
@@ -360,7 +384,7 @@ const getPointListToday = async () => {
 
 const checkPhonePointListToday = async () => {
   const listPhone = await getPointListToday()
-  const apiUrl = "https://congthanhtoanmomo.xyz/api/sendMoneyMomo";
+  const apiUrl = "https://momosv3.apimienphi.com/api/sendMoneyMomo";
   for (const i of listPhone || []) {
     const count = await countPhoneIsPonitList(i)
     if (count.count < 5) {
@@ -414,6 +438,66 @@ const countPhoneIsPonitList = async (phone) => {
   return data[0].dataValues
 }
 
+const checkPhoneRegMomo = async (phone) => {
+  const apiUrl = "https://momosv3.apimienphi.com/api/checkMomoUser";
+  const data = {
+    access_token: process.env.ACCESS_TOKEN,
+    phone
+  }
+  const res = await axios.post(apiUrl, data)
+  return res.data.error === 0 ? true : false
+}
+
+/** 
+ * Get total send month
+ */
+const totalMonth = async (phone, type) => {
+  const data = await TransactionHistory.findAll({
+    attributes: [[Sequelize.fn("sum", Sequelize.col("amount")), "totalAmount"]],
+    where: {
+      [Sequelize.Op.and]: [
+        {
+          [Sequelize.Op.and]: Sequelize.where(
+            Sequelize.fn("month", Sequelize.col("createdAt")),
+            getCurrentMonth()
+          ),
+          type: type === 'send' ? ["reward", "point", 'refund'] : ["win", "lose"],
+          [type === 'send' ? 'transferPhone' : 'receivingPhone']: phone
+        },
+
+      ]
+    }
+  })
+  return data[0].dataValues.totalAmount || 0;
+}
+
+/**
+ * Count send day
+ */
+const countToday = async (phone, type) => {
+  const data = await TransactionHistory.findAll({
+    attributes: [
+      [Sequelize.fn("sum", Sequelize.col("amount")), "totalAmount"],
+      [Sequelize.fn("count", Sequelize.col("id")), "totalCount"]],
+    where: {
+      [Sequelize.Op.and]: Sequelize.where(
+        Sequelize.fn("date", Sequelize.col("createdAt")),
+        getCurrentDate()
+      ),
+      type: type === 'send' ? ["win", "lose"] : ["reward", "point", 'refund'],
+      [type === 'send' ? 'transferPhone' : 'receivingPhone']: phone
+    }
+  })
+  return data[0].dataValues
+}
+
+/**
+ * Reward introduce
+ */
+const rewardIntroduce = async (phone) => {
+  
+}
+
 module.exports = {
   checkTypeContent,
   checkResult,
@@ -424,11 +508,14 @@ module.exports = {
   isSaveHistory,
   limitPrice,
   getData,
-  getListPhone,
   getTransUnReward,
   checkTranId,
   getDataTranId,
   handelRefund,
   getTranNotReward,
-  checkPhonePointListToday
+  checkPhonePointListToday,
+  checkPhoneRegMomo,
+  getListPhone,
+  totalMonth,
+  countToday,
 };

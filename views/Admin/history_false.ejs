@@ -1,0 +1,146 @@
+<%- include('header'); -%>
+    <div class="container-fluid">
+        <div class="row d-flex justify-content-end">
+            <div class="col-3">
+                <button class="btn btn-success float-right btn-refund">Hoàn tiền</button>
+            </div>
+        </div>
+        <!-- Page Heading -->
+        <div class="card shadow mb-4 mt-3">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered text-center" id="dataTable" width="100%" cellspacing="0">
+                        <thead>
+                            <tr>
+                                <td>Chọn</td>
+                                <th>Mã giao dịch</th>
+                                <th>Sđt chuyển</th>
+                                <th>Sđt nhận</th>
+                                <th>Số tiền</th>
+                                <th>Nội dung</th>
+                                <th>Thời gian chuyển</th>
+                            </tr>
+                        </thead>
+                        <tfoot>
+                            <tr>
+                                <td>Chọn</td>
+                                <th>Mã giao dịch</th>
+                                <th>Sđt chuyển</th>
+                                <th>Sđt nhận</th>
+                                <th>Số tiền</th>
+                                <th>Nội dung</th>
+                                <th>Thời gian chuyển</th>
+                            </tr>
+                        </tfoot>
+                        <tbody>
+                            <% list.forEach((item,index)=> { %>
+                                <tr>
+                                    <td><input type="checkbox" name="transId" value="<%=item.tradingCode %>"></td>
+                                    <td>
+                                        <%= item.tradingCode %>
+                                    </td>
+                                    <td>
+                                        <%= item.transferPhone %>
+                                    </td>
+                                    <td>
+                                        <%=item.receivingPhone %>
+                                    </td>
+                                    <td>
+                                        <%= (Intl.NumberFormat().format(item.amount)).replaceAll(',','.') %>
+                                    </td>
+                                    <td>
+                                        <%= item.comment %>
+                                    </td>
+                                    <td>
+                                        <%= (item.createdAt).toLocaleString('es-CL') %>
+                                    </td>
+                                </tr>
+                                <% }) %>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- /.container-fluid -->
+
+    </div>
+    <%- include('footer') %>
+        <script>
+            const token = $('meta[name="csrf-token"]').attr('content')
+            let arrList = []
+            $('input[name="transId"]').on('change', function () {
+                return $(this).is(':checked') ? arrList.push($(this).val()) : arrList.splice(arrList.indexOf($(this).val()), 1);
+            })
+
+            function getCookie(cname) {
+                let name = cname + "=";
+                let ca = document.cookie.split(';');
+                for (let i = 0; i < ca.length; i++) {
+                    let c = ca[i];
+                    while (c.charAt(0) == ' ') {
+                        c = c.substring(1);
+                    }
+                    if (c.indexOf(name) == 0) {
+                        return c.substring(name.length, c.length);
+                    }
+                }
+                return "";
+            } 
+
+            $('.btn-refund').click(() => {
+                if (arrList.length == 0) {
+                    return Swal.fire({
+                        title: 'Thông báo',
+                        text: 'Bạn chưa chọn giao dịch nào',
+                        icon: 'warning',
+                        showConfirmButton: false,
+                        timer: 2000
+                    })
+                }
+                const apiUrl = '/admin/refund'
+
+                $.ajax({
+                    url: apiUrl,
+                    type: 'POST',
+                    headers: {
+                        'CSRF-Token': token,
+                        'Authorization': 'Bearer ' + getCookie('token')
+                    },
+                    data: {
+                        arr: arrList
+                    },
+                    success: (res) => {
+                        if (res.status) {
+                            Swal.fire({
+                                title: 'Thông báo',
+                                text: 'Hoàn tiền thành công',
+                                icon: 'success',
+                                showConfirmButton: false,
+                                timer: 2000
+                            }).then(() => {
+                                location.reload()
+                            })
+                        } else {
+                            Swal.fire({
+                                title: 'Thông báo',
+                                text: 'Hoàn tiền thất bại',
+                                icon: 'error',
+                                showConfirmButton: false,
+                                timer: 2000
+                            })
+                        }
+                    },
+                    error: (err) => {
+                        console.log(err);
+                        Swal.fire({
+                            title: 'Thông báo',
+                            text: 'Hoàn tiền thất bại',
+                            icon: 'error',
+                            showConfirmButton: false,
+                            timer: 2000
+                        })
+                    }
+                })
+            })
+        </script>

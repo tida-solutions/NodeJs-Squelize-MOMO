@@ -8,6 +8,16 @@ module.exports = {
         primaryKey: true,
         type: Sequelize.INTEGER
       },
+      title: {
+        type: Sequelize.TEXT,
+
+      },
+      description: {
+        type: Sequelize.TEXT,
+      },
+      logo: {
+        type: Sequelize.STRING,
+      },
       maintenance: {
         type: Sequelize.STRING,
         defaultValue: 'off'

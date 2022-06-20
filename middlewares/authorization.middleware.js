@@ -26,4 +26,4 @@ passport.deserializeUser((user, done) => {
   done(null, user);
 });
 
-passport;
+module.exports = passport;

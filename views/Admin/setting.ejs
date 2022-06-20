@@ -16,31 +16,43 @@
                                 <div class="row">
                                     <div class="col-sm">
                                         <div class="d-flex justify-content-sm-start">
-                                            <div class="custom-control custom-switch">
-                                                <input type="checkbox" class="custom-control-input maintenance"
-                                                    id="customSwitch0" <%- setting?.maintenance==='on' ? 'checked' : ''
-                                                    %>>
-                                                <label class="custom-control-label" for="customSwitch0">Bảo trì</label>
-                                            </div>
+                                            <form method="post" enctype="multipart/form-data">
+                                                <div class="custom-control custom-switch">
+                                                    <input type="checkbox" class="custom-control-input maintenance"
+                                                        id="customSwitch0" <%- setting?.maintenance==='true' ? 'checked'
+                                                        : '' %>>
+                                                    <label class="custom-control-label" for="customSwitch0">Bảo
+                                                        trì</label>
+                                                </div>
                                         </div>
                                         <div class="row">
                                             <div class="col">
                                                 <div class="form-group">
                                                     <label for="">Tiêu đề</label>
-                                                    <textarea name="" id=""  rows="3" class="form-control"></textarea>
+                                                    <textarea name="" id="title" rows="3"
+                                                        class="form-control"><%= setting?.title  %></textarea>
+                                                    <span class="text-danger" id="errTitle"></span>
                                                 </div>
                                             </div>
                                             <div class="col">
                                                 <div class="form-group">
                                                     <label for="">Mô tả</label>
-                                                    <textarea name="" id=""  rows="3" class="form-control"></textarea>
+                                                    <textarea name="" id="description" rows="3"
+                                                        class="form-control"><%= setting?.description  %></textarea>
+                                                    <span class="text-danger" id="errDescription"></span>
                                                 </div>
                                             </div>
                                         </div>
                                         <div class="row">
-                                            <div class="mb-3">
-                                                <label for="formFileSm" class="form-label">Logo</label>
-                                                <input class="form-control" id="formFileSm" type="file">
+                                            <div class="col">
+                                                <div class="mb-3">
+                                                    <label for="formFileSm" class="form-label">Logo</label>
+                                                    <input class="form-control" id="logo" name="file" type="file">
+                                                </div>
+                                            </div>
+                                            <div class="col">
+                                                <img src="/uploads/<%= setting?.logo || ''  %>"
+                                                    style="width:100px;height:100px" alt="">
                                             </div>
                                         </div>
                                         <div class="row mt-2">
@@ -50,6 +62,8 @@
                                                     <input type="number" class="form-control" id="minPlay"
                                                         placeholder="Min Play" value="<%= setting?.minPlay  %>"
                                                         required>
+                                                    <span class="text-danger" id="errMinplay"></span>
+
                                                 </div>
                                             </div>
                                             <div class="col">
@@ -58,17 +72,21 @@
                                                     <input type="number" class="form-control" id="maxPlay"
                                                         placeholder="Max Play" value="<%= setting?.maxPlay  %>"
                                                         required>
+                                                    <span class="text-danger" id="errMaxPlay"></span>
+
                                                 </div>
                                             </div>
                                         </div>
                                         <div class="form-group mt-5">
-                                            <label for="">Notication</label>
+                                            <label for="">Thông báo</label>
                                             <textarea id="notication" rows="4"
                                                 required><%= setting?.notification  %></textarea>
+                                            <span class="text-danger" id="errNotication"></span>
                                         </div>
                                         <div class="form-group mt-2">
                                             <button class="btn btn-primary btn-save">Save</button>
                                         </div>
+                                        </form>
                                     </div>
                                 </div>
                                 <!-- end col -->
@@ -87,10 +105,21 @@
     <%- include('footer') %>
         <script src="https://cdn.ckeditor.com/ckeditor5/34.1.0/classic/ckeditor.js"></script>
         <script>
+
+            const getMsg = (data, param) => {
+                const msg = data.filter(item => {
+                    if (item.param == param) {
+                        return item.msg
+                    }
+                })
+                return msg.length > 0 ? msg[0].msg : ''
+            }
+
+
             const showAlert = (msg, type) => {
                 return `<div class="alert alert-${type}" role="alert">
-    <strong> ${msg} </strong>
-</div>`
+                 <strong> ${msg} </strong>
+                </div>`
             }
             let notification;
             ClassicEditor.create(document.querySelector('#notication')).then((result) => {
@@ -115,30 +144,63 @@
             $('.btn-save').click(e => {
                 e.preventDefault()
                 const token = $('meta[name="csrf-token"]').attr('content')
+                const title = $('#title').val()
+                const description = $('#description').val()
+                const logo = $('#logo')[0].files[0]
+                const minPlay = $('#minPlay').val()
+                const maxPlay = $('#maxPlay').val()
+                const maintenance = $('.maintenance').is(':checked')
+                const notifications = notification.getData()
+                let formData = new FormData()
+                formData.append('title', title)
+                formData.append('description', description)
+                formData.append('logo', logo)
+                formData.append('minPlay', minPlay)
+                formData.append('maxPlay', maxPlay)
+                formData.append('maintenance', maintenance)
+                formData.append('notification', notifications)
+
                 $.ajax({
                     url: '/admin/setting',
+                    type: 'POST',
+                    data: formData,
+                    cache: false,
+                    contentType: false,
+                    processData: false,
                     headers: {
-                        'CSRF-Token': token,
+                        'X-CSRF-TOKEN': token,
                         'Authorization': 'Bearer ' + getCookie('token')
                     },
-                    method: 'POST',
-                    data: {
-                        minPlay: $('#minPlay').val(),
-                        maxPlay: $('#maxPlay').val(),
-                        notification: notification.getData(),
-                        maintenance: $('.maintenance').is(':checked')
-                    },
                     success: res => {
-                        console.log(res);
-                        if (res.status) {
-                            $('#resultData').html(showAlert(res.msg, 'success'))
+                        const { errors, status } = res
+                        if (status) {
+                            Swal.fire({
+                                title: 'Thành công',
+                                text: 'Sửa thành công',
+                                type: 'success',
+                                showConfirmButton: false,
+                                timer: 2000
+                            }).then(() => {
+                                location.reload()
+                            })
                         } else {
-                            $('#resultData').html(showAlert(res.msg, 'danger'))
+                            $('#errTitle').html(getMsg(errors, 'title'))
+                            $('#errDescription').html(getMsg(errors, 'description'))
+                            $('#errMinplay').html(getMsg(errors, 'minPlay'))
+                            $('#errMaxPlay').html(getMsg(errors, 'maxPlay'))
+                            $('#errNotication').html(getMsg(errors, 'notification'))
                         }
                     },
                     error: err => {
-                        console.log(err);
-                        $('.result').html(showAlert('Something wentrong', 'danger'))
+                        Swal.fire({
+                                title: 'Thất bại',
+                                text: 'Sửa thất bại',
+                                type: 'error',
+                                showConfirmButton: false,
+                                timer: 2000
+                            }).then(() => {
+                                location.reload()
+                            })
                     }
                 })
             })
