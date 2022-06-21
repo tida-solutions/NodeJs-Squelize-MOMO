@@ -8,7 +8,7 @@ const moment = require("moment");
 const Setting = require("../models/index").Setting;
 const axios = require("axios");
 const Promise = require("bluebird");
-const { handelRefund, countToday, totalMonth, getListPhone } = require("../ultils/process.ultil");
+const { handelRefund, countToday, totalMonth, getListPhone,updatePhones } = require("../ultils/process.ultil");
 const User = require("../models/index").User;
 const bcrypt = require('bcrypt');
 
@@ -78,7 +78,7 @@ const viewSetting = async (req, res) => {
  */
 const viewPhone = async (req, res) => {
   const list = await Phone.findAll();
-  updatePhones();
+  updatePhones()
   return res.render("admin/phone", {
     csrfToken: req.csrfToken(),
     list,
@@ -86,67 +86,7 @@ const viewPhone = async (req, res) => {
 }
 
 /**
- * Get list phone from api
- */
-const updatePhones = async () => {
-  let phoneInData = await Phone.findAll();
-  const arrPhoneInData = []
-  phoneInData.forEach(async (phone) => {
-    arrPhoneInData.push(phone.phone);
-  })
-  const phones = await getListPhone();
-  const arrPhones = []
-  phones||[].forEach(async (phone) => {
-    arrPhones.push(phone.phone);
-  })
-  const arrPhoneNotInData = phones||[].filter(phone => !arrPhoneInData.includes(phone.phone));
-  const arrPhoneNotInApi = arrPhoneInData.filter(phone => !arrPhones.includes(phone));
-  if (arrPhoneNotInApi.length > 0) {
-    arrPhoneNotInApi.forEach(async (phone) => {
-      await Phone.destroy({
-        where: {
-          phone: phone
-        }
-      })
-    })
-  }
-  if (arrPhoneNotInData.length > 0)
-    return arrPhoneNotInData.forEach(async (phone) => {
-      const countDay = await countToday(phone.phone, 'send');
-      const receiveTody = await countToday(phone.phone, 'receive');
-      return Phone.create({
-        phone: phone.phone,
-        amount: phone.balance,
-        countSendDay: countDay.totalCount || 0,
-        countReceiveDay: receiveTody.totalCount || 0, 
-        totalSendDay: countDay.totalAmount || 0,
-        totalReceiveDay: receiveTody.totalAmount || 0,
-        totalSendMonth: 0,
-        totalReceiveMonth: 0,
-      })
-    })
-  return phones||[].forEach(async (phone) => {
-    const countDay = await countToday(phone.phone, 'send');
-    const receiveTody = await countToday(phone.phone, 'receive');
-    return Phone.update({
-      amount: phone.balance,
-      countSendDay: countDay.totalCount || 0,
-      countReceiveDay: receiveTody.totalCount || 0,
-      totalSendDay: countDay.totalAmount || 0,
-      totalReceiveDay: receiveTody.totalAmount || 0,
-      totalSendMonth: await totalMonth((phone.phone).toString(), 'send'),
-      totalReceiveMonth: await totalMonth((phone.phone).toString(), 'receive'),
-    },
-      {
-        where: {
-          phone: phone.phone
-        }
-      })
-  })
-}
-
-/**
- * Show / Hidden phone
+ * Show / Hidden phone 
  */
 const actionPhone = async (req, res) => {
   const { phone, isShow } = req.body;
@@ -414,5 +354,5 @@ module.exports = {
   refundTransFalse,
   viewWithdraw,
   viewChangePassword,
-  changePassword
+  changePassword,
 };

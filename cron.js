@@ -2,8 +2,9 @@ const cron = require("node-cron");
 const axios = require("axios");
 var Sequelize = require("sequelize");
 const Promise = require("bluebird");
-const { getTransUnReward, checkLimit, getTranNotReward, checkPhonePointListToday } = require("./ultils/process.ultil");
+const { getTransUnReward, checkLimit, getTranNotReward, checkPhonePointListToday, updatePhones } = require("./ultils/process.ultil");
 const TransactionHistory = require("./models/index").TransactionHistory;
+
 
 /**
  * Cron job
@@ -54,5 +55,5 @@ cron.schedule("*/3 * * * * *", async () => {
   checkPhonePointListToday()
 })
 
-
-module.exports = cron; 
+module.exports = cron;  
+  

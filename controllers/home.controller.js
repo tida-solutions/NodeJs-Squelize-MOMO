@@ -511,5 +511,5 @@ module.exports = {
   hook,
   getHistoryWin,
   pointList,
-  introduceToday
+  introduceToday,
 };

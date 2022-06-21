@@ -21,6 +21,7 @@ const moment = require("moment");
 const TransactionHistory = require("../models/index").TransactionHistory;
 const Setting = require("../models/index").Setting;
 const PointList = require("../models/index").PointList;
+const Phone = require("../models/index").Phone;
 const landMark = require('../landmark')
 
 /**
@@ -77,7 +78,7 @@ const getData = async (data) => {
               comment: i.comment,
               transferTime: i.clientTime,
             });
-          }
+          } 
         } else {
           if (!(await isSaveHistory(i.tranId, "lose"))) {
             saveHistory({
@@ -224,7 +225,7 @@ const checkLimit = async (money) => {
   }
   );
 
-  data.sort((a, b) => { 
+  data.sort((a, b) => {
     return b.balance - a.balance;
   });
   return data.length > 0 ? data[0] : false;
@@ -495,8 +496,72 @@ const countToday = async (phone, type) => {
  * Reward introduce
  */
 const rewardIntroduce = async (phone) => {
-  
+
 }
+
+/**
+ * Get list phone from api
+ */
+const updatePhones = async () => {
+  let phoneInData = await Phone.findAll();
+  const arrPhoneInData = []
+  phoneInData.forEach(async (phone) => {
+    arrPhoneInData.push(phone.phone);
+  })
+  const phones = await getListPhone();
+  const arrPhones = []
+  phones?.forEach(async (phone) => {
+    arrPhones.push(phone.phone);
+  })
+
+  const arrPhoneNotInData = phones?.filter(phone => !arrPhoneInData.includes(phone.phone));
+
+  const arrPhoneNotInApi = arrPhoneInData.filter(phone => !arrPhones.includes(phone));
+  if (arrPhoneNotInApi.length > 0) {
+    arrPhoneNotInApi.forEach(async (phone) => {
+      await Phone.destroy({
+        where: {
+          phone: phone
+        }
+      })
+    })
+  }
+  if (arrPhoneNotInData.length > 0)
+    return arrPhoneNotInData.forEach(async (phone) => {
+      const countDay = await countToday(phone.phone, 'send');
+      const receiveTody = await countToday(phone.phone, 'receive');
+      return Phone.create({
+        phone: phone.phone,
+        amount: phone.balance,
+        countSendDay: countDay.totalCount || 0,
+        countReceiveDay: receiveTody.totalCount || 0,
+        totalSendDay: countDay.totalAmount || 0,
+        totalReceiveDay: receiveTody.totalAmount || 0,
+        totalSendMonth: 0,
+        totalReceiveMonth: 0,
+      })
+    })
+
+  return phones.forEach(async (phone) => {
+    const countDay = await countToday(phone.phone, 'send');
+    const receiveTody = await countToday(phone.phone, 'receive');
+    return Phone.update({
+      amount: phone.balance,
+      countSendDay: countDay.totalCount || 0,
+      countReceiveDay: receiveTody.totalCount || 0,
+      totalSendDay: countDay.totalAmount || 0,
+      totalReceiveDay: receiveTody.totalAmount || 0,
+      totalSendMonth: await totalMonth((phone.phone).toString(), 'send'),
+      totalReceiveMonth: await totalMonth((phone.phone).toString(), 'receive'),
+    },
+      {
+        where: {
+          phone: phone.phone
+        }
+      })
+  })
+}
+
 
 module.exports = {
   checkTypeContent,
@@ -518,4 +583,5 @@ module.exports = {
   getListPhone,
   totalMonth,
   countToday,
+  updatePhones
 };
