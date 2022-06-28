@@ -12,6 +12,7 @@ module.exports = (sequelize, DataTypes) => {
     static associate(models) {
       // define association here
     }
+
   }
   Setting.init({
     title: DataTypes.TEXT,
@@ -21,9 +22,13 @@ module.exports = (sequelize, DataTypes) => {
     notification: DataTypes.TEXT,
     minPlay: DataTypes.INTEGER,
     maxPlay: DataTypes.INTEGER,
+    accessToken: DataTypes.STRING,
+    signature: DataTypes.STRING,
+    boxChat: DataTypes.STRING
   }, {
     sequelize,
     modelName: 'Setting',
   });
+
   return Setting;
 };

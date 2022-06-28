@@ -103,7 +103,7 @@
                                                 vụ
                                                 ngày</a>
                                         </li>
-                                        <li class="nav-item" role="presentation" id="tab-name">
+                                        <!-- <li class="nav-item" role="presentation" id="tab-name">
                                             <a class="nav-link tab-name btn btn-primary" id="introduce-tab"
                                                 data-toggle="pill" href="#introduce" role="tab"
                                                 aria-controls="introduce" aria-selected="false">Giới thiệu bạn bè</a>
@@ -112,7 +112,7 @@
                                             <a class="nav-link tab-name btn btn-primary" id="lucky-number-tab"
                                                 data-toggle="pill" href="#lucky-number" role="tab"
                                                 aria-controls="lucky-number" aria-selected="false">Con số may mắn</a>
-                                        </li>
+                                        </li> -->
                                     </ul>
 
                                 </div>
@@ -135,7 +135,8 @@
                                                 <tr>
                                                     <td scope="row" class="phone"><span>
                                                             <%= item.phone %>
-                                                        </span> <i class="fa-solid fa-copy"></i></td>
+                                                        </span> <i class="fa-solid fa-copy"
+                                                            data-clipboard-text="<%= item.phone %> "></i></td>
                                                     <td>
                                                         <%- Intl.NumberFormat().format(setting?.minPlay).replaceAll(',','.')
                                                             %>
@@ -181,7 +182,8 @@
                                                                 <span>6</span>
                                                                 <span>8</span>
                                                             </td>
-                                                            <td class="money">X 2.36</td>
+                                                            <td class="money">X <%= game?.chanle %>
+                                                            </td>
                                                         </tr>
                                                         <tr>
                                                             <td><span>L</span></td>
@@ -191,7 +193,8 @@
                                                                 <span>5</span>
                                                                 <span>7</span>
                                                             </td>
-                                                            <td class="money">X 2.31</td>
+                                                            <td class="money">X <%= game?.chanle %>
+                                                            </td>
                                                         </tr>
 
                                                     </tbody>
@@ -226,7 +229,8 @@
                                                                 <span>7</span>
                                                                 <span>9</span>
                                                             </td>
-                                                            <td class="money">X 1.96</td>
+                                                            <td class="money">X <%= game?.chanle2 %>
+                                                            </td>
                                                         </tr>
                                                         <tr>
                                                             <td><span>C2</span></td>
@@ -237,10 +241,11 @@
                                                                 <span>6</span>
                                                                 <span>8</span>
                                                             </td>
-                                                            <td class="money">X 1.96</td>
+                                                            <td class="money">X <%= game?.chanle2 %>
+                                                            </td>
                                                         </tr>
                                                         <tr>
-                                                            <td><span>T2</span></td>
+                                                            <td><span>X2</span></td>
                                                             <td>
                                                                 <span>0</span>
                                                                 <span>1</span>
@@ -248,10 +253,10 @@
                                                                 <span>3</span>
                                                                 <span>4</span>
                                                             </td>
-                                                            <td class="money">X 1.96</td>
+                                                            <td class="money">X <%= game?.chanle2 %></td>
                                                         </tr>
                                                         <tr>
-                                                            <td><span>x2</span></td>
+                                                            <td><span>T2</span></td>
                                                             <td>
                                                                 <span>5</span>
                                                                 <span>6</span>
@@ -259,7 +264,7 @@
                                                                 <span>8</span>
                                                                 <span>9</span>
                                                             </td>
-                                                            <td class="money">X 1.96</td>
+                                                            <td class="money">X <%= game?.chanle2 %></td>
                                                         </tr>
                                                     </tbody>
                                                 </table>
@@ -291,7 +296,8 @@
                                                                 <span>3</span>
                                                                 <span>4</span>
                                                             </td>
-                                                            <td class="money">X 2.31</td>
+                                                            <td class="money">X <%= game?.taixiu %>
+                                                            </td>
                                                         </tr>
                                                         <tr>
                                                             <td><span>T</span></td>
@@ -301,7 +307,8 @@
                                                                 <span>7</span>
                                                                 <span>8</span>
                                                             </td>
-                                                            <td class="money">X 2.31</td>
+                                                            <td class="money">X <%= game?.taixiu %>
+                                                            </td>
                                                         </tr>
                                                     </tbody>
                                                 </table>
@@ -345,14 +352,16 @@
                                                                 <span>95</span>
                                                                 <span>96</span>
                                                             </td>
-                                                            <td class="money">x 3</td>
+                                                            <td class="money">x <%= game?.gap3 %>
+                                                            </td>
                                                         </tr>
                                                         <tr>
                                                             <td><span>G3</span></td>
                                                             <td>
                                                                 <span>66</span> <span>99</span>
                                                             </td>
-                                                            <td class="money">x 4</td>
+                                                            <td class="money">x <%= game?.gap3 %>
+                                                            </td>
                                                         </tr>
                                                         <tr>
                                                             <td><span>G3</span></td>
@@ -363,7 +372,8 @@
                                                                 <span>678</span>
                                                                 <span>789</span>
                                                             </td>
-                                                            <td class="money">x 5</td>
+                                                            <td class="money">x <%= game?.gap3 %>
+                                                            </td>
                                                         </tr>
                                                     </tbody>
                                                 </table>
@@ -393,7 +403,8 @@
                                                                 <span>17</span>
                                                                 <span>27</span>
                                                             </td>
-                                                            <td class="money">X 2</td>
+                                                            <td class="money">X <%= game?.tong3so %>
+                                                            </td>
                                                         </tr>
                                                         <tr>
                                                             <td><span>S </span></td>
@@ -401,7 +412,8 @@
                                                                 <span>8</span>
                                                                 <span>18</span>
                                                             </td>
-                                                            <td class="money">X 3</td>
+                                                            <td class="money">X <%= game?.tong3so %>
+                                                            </td>
                                                         </tr>
                                                         <tr>
                                                             <td><span>S </span></td>
@@ -409,7 +421,8 @@
                                                                 <span>9</span>
                                                                 <span>19</span>
                                                             </td>
-                                                            <td class="money">X 3.5</td>
+                                                            <td class="money">X <%= game?.tong3so %>
+                                                            </td>
                                                         </tr>
                                                     </tbody>
                                                 </table>
@@ -440,7 +453,8 @@
                                                                 <span>2</span>
                                                                 <span>3</span>
                                                             </td>
-                                                            <td class="money">x 3</td>
+                                                            <td class="money">x <%= game?.motphan3 %>
+                                                            </td>
                                                         </tr>
 
                                                         <tr>
@@ -450,7 +464,8 @@
                                                                 <span>5</span>
                                                                 <span>6</span>
                                                             </td>
-                                                            <td class="money">x 3</td>
+                                                            <td class="money">x <%= game?.motphan3 %>
+                                                            </td>
                                                         </tr>
 
                                                         <tr>
@@ -460,7 +475,8 @@
                                                                 <span>8</span>
                                                                 <span>9</span>
                                                             </td>
-                                                            <td class="money">x 3</td>
+                                                            <td class="money">x <%= game?.motphan3 %>
+                                                            </td>
                                                         </tr>
                                                     </tbody>
                                                 </table>
@@ -485,26 +501,30 @@
                                                             <td><span>CX</span></td>
                                                             <td><span>0</span> <span>2</span> <span>4</span>
                                                             </td>
-                                                            <td class="money">x 3.3</td>
+                                                            <td class="money">x <%= game?.xien %>
+                                                            </td>
                                                         </tr>
 
                                                         <tr>
                                                             <td><span>LT</span></td>
                                                             <td><span>5</span> <span>7</span> <span>9</span>
                                                             </td>
-                                                            <td class="money">x 3.3</td>
+                                                            <td class="money">x <%= game?.xien %>
+                                                            </td>
                                                         </tr>
 
                                                         <tr>
                                                             <td><span>CT</span></td>
                                                             <td> <span>6</span> <span>8</span></td>
-                                                            <td class="money">x 3.3</td>
+                                                            <td class="money">x <%= game?.xien %>
+                                                            </td>
                                                         </tr>
 
                                                         <tr>
                                                             <td><span>LX</span></td>
                                                             <td> <span>1</span> <span>3</span></td>
-                                                            <td class="money">x 3.3</td>
+                                                            <td class="money">x <%= game?.xien %>
+                                                            </td>
                                                         </tr>
                                                     </tbody>
                                                 </table>
@@ -532,55 +552,65 @@
                                                         <tr>
                                                             <td><span> D0 </span></td>
                                                             <td><span> 0 </span></td>
-                                                            <td class="money">x 7</td>
+                                                            <td class="money">x <%= game?.doanso %>
+                                                            </td>
                                                         </tr>
 
                                                         <tr>
                                                             <td><span> D1 </span></td>
                                                             <td><span>1 </span></td>
-                                                            <td class="money">x 7</td>
+                                                            <td class="money">x <%= game?.doanso %>
+                                                            </td>
                                                         </tr>
 
                                                         <tr>
                                                             <td><span> D2 </span></td>
                                                             <td><span> 2</span></td>
-                                                            <td class="money">x 7</td>
+                                                            <td class="money">x <%= game?.doanso %>
+                                                            </td>
                                                         </tr>
 
                                                         <tr>
                                                             <td><span> D3 </span></td>
                                                             <td><span>3 </span></td>
-                                                            <td class="money">x 7</td>
+                                                            <td class="money">x <%= game?.doanso %>
+                                                            </td>
                                                         </tr>
                                                         <tr>
                                                             <td><span> D4 </span></td>
                                                             <td><span>4 </span></td>
-                                                            <td class="money">x 7</td>
+                                                            <td class="money">x <%= game?.doanso %>
+                                                            </td>
                                                         </tr>
                                                         <tr>
                                                             <td><span> D5 </span></td>
                                                             <td><span>5</span></td>
-                                                            <td class="money">x 7</td>
+                                                            <td class="money">x <%= game?.doanso %>
+                                                            </td>
                                                         </tr>
                                                         <tr>
                                                             <td><span>D6 </span></td>
                                                             <td><span>6 </span></td>
-                                                            <td class="money">x 7</td>
+                                                            <td class="money">x <%= game?.doanso %>
+                                                            </td>
                                                         </tr>
                                                         <tr>
                                                             <td><span> D7 </span></td>
                                                             <td><span>7 </span></td>
-                                                            <td class="money">x 7</td>
+                                                            <td class="money">x <%= game?.doanso %>
+                                                            </td>
                                                         </tr>
                                                         <tr>
                                                             <td><span> D8 </span></td>
                                                             <td><span>8 </span></td>
-                                                            <td class="money">x 7</td>
+                                                            <td class="money">x <%= game?.doanso %>
+                                                            </td>
                                                         </tr>
                                                         <tr>
                                                             <td><span> D9 </span></td>
                                                             <td><span>9</span></td>
-                                                            <td class="money">x 7</td>
+                                                            <td class="money">x <%= game?.doanso %>
+                                                            </td>
                                                         </tr>
                                                     </tbody>
                                                 </table>
@@ -611,13 +641,15 @@
                                                         <tr>
                                                             <td><span> A </span></td>
                                                             <td style="color:#F6D126 ;">( A - B) < 0</td>
-                                                            <td class="money">x 2.31</td>
+                                                            <td class="money">x <%= game?.amduong %>
+                                                            </td>
                                                         </tr>
 
                                                         <tr>
                                                             <td><span> D </span></td>
                                                             <td style="color:#F6D126 ;">( A - B) >= 0</td>
-                                                            <td class="money">x 2.31</td>
+                                                            <td class="money">x <%= game?.amduong %>
+                                                            </td>
                                                         </tr>
                                                     </tbody>
                                                 </table>
@@ -654,7 +686,8 @@
                                                                 <span> 678</span>
                                                                 <span> 789 </span>
                                                             </td>
-                                                            <td class="money">x 3.5</td>
+                                                            <td class="money">x <%= game?.lien %>
+                                                            </td>
                                                         </tr>
                                                     </tbody>
                                                 </table>
@@ -695,7 +728,7 @@
                                                                 <span> 99 </span>
                                                                 </span>
                                                             </td>
-                                                            <td class="money">x 3.5</span></td>
+                                                            <td class="money">x <%= game?.motdoi %></span></td>
                                                         </tr>
                                                     </tbody>
                                                 </table>
@@ -950,16 +983,17 @@
                                                 type="submit">Kiểm
                                                 tra</button>
                                         </div>
-                                        <div>
+                                        <!-- <div>
                                             <a href="#" class="btn btn-primary contact-admin">Liên hệ Admin báo lỗi</a>
-                                        </div>
+                                        </div> -->
                                     </form>
                                 </div>
                                 <div class="contact border-main overlay">
                                     <div class="text-center">
-                                        <a href="#" class="btn btn-primary">Chat với Admin</a>
+                                        <a href="<%= setting?.boxChat %>" target="_blank" class="btn btn-primary">Box
+                                            Chat</a>
                                     </div>
-                                    <div class="text-center">
+                                    <!-- <div class="text-center">
                                         <a href="#" class="btn btn-primary">Nhóm chat Zalo</a>
                                     </div>
                                     <div class="text-center">
@@ -967,7 +1001,7 @@
                                     </div>
                                     <div class="text-center">
                                         <a href="#" class="btn btn-primary">Facebook Admin</a>
-                                    </div>
+                                    </div> -->
                                 </div>
                             </div>
                             <!-- Bang xep hang -->
@@ -1086,10 +1120,13 @@
                 <script src="https://cdn.socket.io/4.5.0/socket.io.min.js"
                     integrity="sha384-7EyYLQZgWBi67fBtVxw60/OWl1kjsfrPFcaU0pp0nAh+i8FD068QogUvg85Ewy1k"
                     crossorigin="anonymous"></script>
+                <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.10/clipboard.min.js"></script>
                 <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
                 <script src="/home/assets/js/bootstrap.min.js"></script>
-                <script src="/home/assets/js/main.js"></script>
-
+                <script type="module" src="/home/assets/js/main.js"></script>
+                <script>
+                    new ClipboardJS('.fa-copy');
+                </script>
 </body>
 
 </html>

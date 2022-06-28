@@ -15,7 +15,9 @@ const {
   getDataTranId,
   checkPhoneRegMomo,
   countToday,
-  checkLimit
+  checkLimit,
+  getSetting,
+  getGame
 } = require("../ultils/process.ultil");
 const moment = require("moment");
 const games = require('../games.json')
@@ -42,7 +44,7 @@ const checkTransFalse = async (req, res) => {
       const checkCount = await checkCountRefund(code);
       if (checkWin && !checkreward) {
         const typeContent = checkTypeContent(dataComent);
-        const result = checkResult(typeContent, code, dataComent);
+        const result = await checkResult(typeContent, code, dataComent);
         sendReward({
           transId: code,
           reciever: dataTranId.partnerId,
@@ -161,10 +163,10 @@ const getHistoryWin = async (req, res) => {
       ['id', 'DESC']
     ]
   })
-  const end = data.map(item => {
+  const end = data.map(async item => {
     const comment = item.comment.toLowerCase();
     const checkType = checkTypeContent(comment)
-    const result = checkResult(checkType, item.tradingCode, comment)
+    const result = await checkResult(checkType, item.tradingCode, comment)
     return {
       transferPhone: item.transferPhone,
       amount: item.amount,
@@ -192,10 +194,10 @@ const historyWin = async () => {
       ['id', 'DESC']
     ]
   })
-  const end = data.map(item => {
+  const end = data.map(async item => {
     const comment = item.comment.toLowerCase();
     const checkType = checkTypeContent(comment)
-    const result = checkResult(checkType, item.tradingCode, comment)
+    const result = await checkResult(checkType, item.tradingCode, comment)
     return {
       transferPhone: item.transferPhone,
       amount: item.amount,
@@ -207,22 +209,19 @@ const historyWin = async () => {
   return end
 }
 
-/**
+/** 
  * View Home
  */
 const viewHome = async (req, res) => {
-  const setting = await Setting.findOne({
-    where: {
-      id: 1
-    }
-  });
-
+  const setting = await getSetting();
+  const game = await getGame();
   return res.render("home/index", {
     top: await getTops(),
     phones: await Phone.findAll({ where: { isShow: true } }),
     historyWin: await historyWin(),
     csrfToken: req.csrfToken(),
-    setting
+    setting,
+    game
   });
 };
 
@@ -230,9 +229,9 @@ const viewHome = async (req, res) => {
  * Receiver from hook
  */
 const hook = async (req, res) => {
+  const setting = await getSetting()
 
-  const signatureApi = process.env.SIGNATURE;
-
+  const signatureApi = setting.dataValues.signature;
 
   let {
     signature,
@@ -244,20 +243,16 @@ const hook = async (req, res) => {
     amount,
     comment,
   } = req.body;
-  const setting = await Setting.findOne({
-    where: {
-      id: 1
-    }
-  })
-  if (setting.maintenance == 'false') {
+  if (setting.dataValues.maintenance === 'false') {
     if (signature && signature === signatureApi) {
       comment = comment.trim().toLowerCase();
       const typeContent = checkTypeContent(comment);
-      const result = checkResult(typeContent, tranId, comment);
+      const result = await checkResult(typeContent, tranId, comment);
       const checkLimitPrice = await limitPrice(amount);
       const listPhoneBlocked = await getListPhoneBlocked();
       if (checkLimitPrice || listPhoneBlocked.includes(partnerId)) {
         if (!(await isSaveHistory(tranId, "false"))) {
+          console.log(1);
           saveHistory({
             receivingPhone: phone,
             transferPhone: partnerId,
@@ -274,6 +269,7 @@ const hook = async (req, res) => {
       } else {
         if (result) {
           if (!(await isSaveHistory(tranId, "win"))) {
+            console.log(2);
             saveHistory({
               receivingPhone: phone,
               transferPhone: partnerId,
@@ -297,6 +293,7 @@ const hook = async (req, res) => {
         } else {
           if (typeContent === "other") {
             if (!(await isSaveHistory(tranId, "false"))) {
+              console.log(3);
               saveHistory({
                 receivingPhone: phone,
                 transferPhone: partnerId,
@@ -312,6 +309,7 @@ const hook = async (req, res) => {
             });
           } else {
             if (!(await isSaveHistory(tranId, "lose"))) {
+              console.log(4);
               saveHistory({
                 receivingPhone: phone,
                 transferPhone: partnerId,
@@ -340,8 +338,6 @@ const hook = async (req, res) => {
       msg: "maintenance",
     });
   }
-
-
 };
 
 /**
@@ -458,31 +454,31 @@ const introduceToday = async (req, res) => {
   const isCheck = landmark.find(item => Number(item.bettween[0]) >= moneyOfFriend.totalAmount && Number(item.bettween[1]) >= moneyOfFriend.totalAmount);
   const limit = await checkLimit(isCheck.gift)
   //if (limit) {
-    saveHistory({
-      receivingPhone: phoneUser,
-      transferPhone: limit.phone,
-      tradingCode: null,
-      type: "introduce",
-      amount: isCheck.gift,
-      comment: `Introduce | ${phoneFriend} | ${getCurrentDate()}`,
-    })
-    Introduce.create({
-      phoneFriend,
-      phoneUser,
-    })
-    const dataSend = {
-      access_token: process.env.ACCESS_TOKEN,
-      phone: limit.phone,
-      phoneto: phoneUser,
-      amount: isCheck.gift,
-      note: `Introduce | ${phoneFriend} | ${getCurrentDate()}`,
-    };
-    // axios.post(apiUrl, dataSend)
-    return res.json({
-      status: true,
-      msg: `Chúc mừng bạn nhận được ${isCheck.gift} từ ${phoneFriend}`
-    })
- // }
+  saveHistory({
+    receivingPhone: phoneUser,
+    transferPhone: limit.phone,
+    tradingCode: null,
+    type: "introduce",
+    amount: isCheck.gift,
+    comment: `Introduce | ${phoneFriend} | ${getCurrentDate()}`,
+  })
+  Introduce.create({
+    phoneFriend,
+    phoneUser,
+  })
+  const dataSend = {
+    access_token: process.env.ACCESS_TOKEN,
+    phone: limit.phone,
+    phoneto: phoneUser,
+    amount: isCheck.gift,
+    note: `Introduce | ${phoneFriend} | ${getCurrentDate()}`,
+  };
+  // axios.post(apiUrl, dataSend)
+  return res.json({
+    status: true,
+    msg: `Chúc mừng bạn nhận được ${isCheck.gift} từ ${phoneFriend}`
+  })
+  // }
 }
 
 

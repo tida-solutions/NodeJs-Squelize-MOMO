@@ -22,7 +22,12 @@ const TransactionHistory = require("../models/index").TransactionHistory;
 const Setting = require("../models/index").Setting;
 const PointList = require("../models/index").PointList;
 const Phone = require("../models/index").Phone;
+const GameModel = require("../models/index").Game;
 const landMark = require('../landmark')
+
+
+
+
 
 /**
  * Get data from api
@@ -31,7 +36,7 @@ const getData = async (data) => {
   for (const i of data) {
     const comment = i.comment.trim().toLowerCase();
     const typeContent = checkTypeContent(comment);
-    const result = checkResult(typeContent, i.tranId, comment);
+    const result = await checkResult(typeContent, i.tranId, comment);
     const checkLimitPrice = await limitPrice(i.amount);
     if (checkLimitPrice) {
       if (!(await isSaveHistory(i.tranId, "false"))) {
@@ -78,7 +83,7 @@ const getData = async (data) => {
               comment: i.comment,
               transferTime: i.clientTime,
             });
-          } 
+          }
         } else {
           if (!(await isSaveHistory(i.tranId, "lose"))) {
             saveHistory({
@@ -97,6 +102,24 @@ const getData = async (data) => {
   }
 };
 
+const getSetting = () => {
+  return Setting.findOne({
+    attributes: [
+      'title',
+      'description',
+      'logo',
+      'maintenance',
+      'notification',
+      'minPlay',
+      'maxPlay',
+      'accessToken',
+      'signature',
+      'boxChat'
+    ]
+  });
+}
+
+
 /**
  * Check type content
  */
@@ -110,32 +133,32 @@ const checkTypeContent = (comment) => {
 /** 
  * Check result
  */
-const checkResult = (type, transId, comment) => {
+const checkResult = async (type, transId, comment) => {
   switch (type) {
     case "chanle":
-      return checkChanle(transId, comment);
+      return await checkChanle(transId, comment);
     case "taixiu":
-      return checkTaiXiu(transId, comment);
+      return await checkTaiXiu(transId, comment);
     case "chanle2":
-      return checkChanle2(transId, comment);
+      return await checkChanle2(transId, comment);
     case "gap3":
-      return checkGap3(transId, comment);
+      return await checkGap3(transId, comment);
     case "tong3so":
-      return checkTong3So(transId, comment);
+      return await checkTong3So(transId, comment);
     case "1phan3":
-      return check1Phan3(transId, comment);
+      return await check1Phan3(transId, comment);
     case "xien":
-      return checkXien(transId, comment);
+      return await checkXien(transId, comment);
     case "doanso":
-      return checkDoanSo(transId, comment);
+      return await checkDoanSo(transId, comment);
     case "amduong":
-      return checkAmDuong(transId, comment);
+      return await checkAmDuong(transId, comment);
     case "lien":
-      return checkLien(transId, comment);
+      return await checkLien(transId, comment);
     case "motdoi":
-      return check1Doi(transId, comment);
+      return await check1Doi(transId, comment);
     default:
-      return checkOther(transId, comment);
+      return await checkOther(transId, comment);
   }
 };
 
@@ -193,7 +216,8 @@ const saveHistory = (data) => {
 const getListPhone = async () => {
   try {
     const apiUrl = "https://momosv3.apimienphi.com/api/getMomoInfo";
-    const access_token = process.env.ACCESS_TOKEN;
+    const setting = await getSetting();
+    const access_token = setting.dataValues.accessToken;
     const listPhone = await axios.post(apiUrl, { access_token });
     let data = await Promise.all(
       listPhone.data.data.map(async (phone) => {
@@ -248,31 +272,30 @@ const isSaveHistory = async (transId, type) => {
  * Check limite price
  */
 const limitPrice = async (price) => {
-  const setting = await Setting.findOne({
-    where: {
-      id: 1
-    }
-  })
+  const setting = await getSetting();
   return price < setting.minPlay || price > setting.maxPlay ? true : false;
 };
 
 
 const getTransUnReward = async () => {
-  return await TransactionHistory.findAll({
+  const data = await TransactionHistory.findAll({
     where: {
       type: "unreward"
     },
   });
+  return data.map(item => item.dataValues)
 }
 
 const checkTranId = async (tranId) => {
   const apiUrl = 'https://momosv3.apimienphi.com/api/checkTranId'
-  const access_token = process.env.ACCESS_TOKEN
+  const setting = await getSetting();
+  const access_token = setting.dataValues.accessToken;
   const data = {
     access_token,
     tranId
   }
   const res = await axios.post(apiUrl, data)
+
 
   return res.data.data && moment(res.data.data.clientTime).format("YYYY-MM-DD") == getCurrentDate() ? true : false
 }
@@ -280,13 +303,15 @@ const checkTranId = async (tranId) => {
 
 const getDataTranId = async (tranId) => {
   const apiUrl = 'https://momosv3.apimienphi.com/api/checkTranId'
-  const access_token = process.env.ACCESS_TOKEN
+  const setting = await getSetting();
+  const access_token = setting.dataValues.accessToken;
   const data = {
     access_token,
     tranId
   }
 
   const res = await axios.post(apiUrl, data)
+  console.log(res);
   return res.data.data
 }
 
@@ -304,8 +329,10 @@ const handelRefund = async (tranId) => {
         amount: data.amount,
         comment: `${tranId} | Refund`,
       })
+      const setting = await getSetting();
+      const access_token = setting.dataValues.accessToken;
       const dataSend = {
-        access_token: process.env.ACCESS_TOKEN,
+        access_token,
         phone: limit.phone,
         phoneto: data.partnerId,
         amount: data.amount,
@@ -360,7 +387,7 @@ const getTranNotReward = async () => {
   for (const item of win) {
     const comment = (item.comment).toLowerCase()
     const typeContent = checkTypeContent(comment);
-    const result = checkResult(typeContent, item.tradingCode, comment);
+    const result = await checkResult(typeContent, item.tradingCode, comment);
     if (!await allTransWinUnReward(item.tradingCode)) {
       sendReward({
         transId: item.tradingCode,
@@ -402,13 +429,16 @@ const checkPhonePointListToday = async () => {
             amount: isCheck[0].gift,
             comment: `${i} | Point List`,
           })
+          const setting = await getSetting();
+          const access_token = setting.dataValues.accessToken;
           const dataSend = {
-            access_token: process.env.ACCESS_TOKEN,
+            access_token,
             phone: limit.phone,
             phoneto: i,
             amount: isCheck[0].gift,
             note: `${isCheck[0].gift} | Point List`,
           };
+          console.log(1);
           axios.post(apiUrl, dataSend)
         }
       }
@@ -439,10 +469,14 @@ const countPhoneIsPonitList = async (phone) => {
   return data[0].dataValues
 }
 
+
+
 const checkPhoneRegMomo = async (phone) => {
   const apiUrl = "https://momosv3.apimienphi.com/api/checkMomoUser";
+  const setting = await getSetting();
+  const access_token = setting.dataValues.accessToken;
   const data = {
-    access_token: process.env.ACCESS_TOKEN,
+    access_token,
     phone
   }
   const res = await axios.post(apiUrl, data)
@@ -481,17 +515,21 @@ const countToday = async (phone, type) => {
       [Sequelize.fn("sum", Sequelize.col("amount")), "totalAmount"],
       [Sequelize.fn("count", Sequelize.col("id")), "totalCount"]],
     where: {
-      [Sequelize.Op.and]: Sequelize.where(
-        Sequelize.fn("date", Sequelize.col("createdAt")),
-        getCurrentDate()
-      ),
-      type: type === 'send' ? ["win", "lose"] : ["reward", "point", 'refund'],
+      // [Sequelize.Op.and]: Sequelize.where(
+      //   Sequelize.fn("date", Sequelize.col("createdAt")),
+      //   getCurrentDate()
+      // ),
+      type: type === 'send' ? ["reward", "point", 'refund'] : ["win", "lose"],
       [type === 'send' ? 'transferPhone' : 'receivingPhone']: phone
     }
   })
   return data[0].dataValues
 }
 
+countToday('0766667020', 'receiver').then(res => {
+  console.log(res);
+});
+ 
 /**
  * Reward introduce
  */
@@ -562,6 +600,12 @@ const updatePhones = async () => {
   })
 }
 
+const getGame = async () => {
+  const data = await GameModel.findOne({
+    attributes: [`chanle`, `chanle2`, `taixiu`, `gap3`, `tong3so`, `motphan3`, `xien`, `doanso`, `amduong`, `lien`, `motdoi`]
+  });
+  return data.dataValues;
+}
 
 module.exports = {
   checkTypeContent,
@@ -583,5 +627,7 @@ module.exports = {
   getListPhone,
   totalMonth,
   countToday,
-  updatePhones
+  updatePhones,
+  getSetting,
+  getGame
 };

@@ -77,11 +77,38 @@
                                                 </div>
                                             </div>
                                         </div>
+                                        <div class="row mt-2">
+                                            <div class="col">
+                                                <div class="form-group">
+                                                    <label for="">Access Token Api</label>
+                                                    <input type="text" class="form-control" id="accessToken"
+                                                        placeholder="Access Token" value="<%= setting?.accessToken  %>"
+                                                        required>
+                                                    <span class="text-danger" id="errAccessToken"></span>
+
+                                                </div>
+                                            </div>
+                                            <div class="col">
+                                                <div class="form-group">
+                                                    <label for="">Signature Api</label>
+                                                    <input type="text" class="form-control" id="signature"
+                                                        placeholder="Signature" value="<%= setting?.signature  %>"
+                                                        required>
+                                                    <span class="text-danger" id="errSignature"></span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="">Link Box Chat</label>
+                                            <input type="text" class="form-control" id="boxChat" placeholder="Box Chat"
+                                                value="<%= setting?.boxChat  %>" required>
+                                            <span class="text-danger" id="errBoxChat"></span>
+                                        </div>
                                         <div class="form-group mt-5">
                                             <label for="">Thông báo</label>
                                             <textarea id="notication" rows="4"
                                                 required><%= setting?.notification  %></textarea>
-                                            <span class="text-danger" id="errNotication"></span>
+                                            <span class="text-danger" id="errNotication"></span> 
                                         </div>
                                         <div class="form-group mt-2">
                                             <button class="btn btn-primary btn-save">Save</button>
@@ -144,11 +171,12 @@
             $('.btn-save').click(e => {
                 e.preventDefault()
                 const token = $('meta[name="csrf-token"]').attr('content')
-                const title = $('#title').val()
-                const description = $('#description').val()
+                const title = $('#title').val().trim()
+                const description = $('#description').val().trim()
                 const logo = $('#logo')[0].files[0]
-                const minPlay = $('#minPlay').val()
-                const maxPlay = $('#maxPlay').val()
+                const minPlay = $('#minPlay').val().trim()
+                const maxPlay = $('#maxPlay').val().trim()
+                const boxChat = $('#boxChat').val().trim()
                 const maintenance = $('.maintenance').is(':checked')
                 const notifications = notification.getData()
                 let formData = new FormData()
@@ -157,6 +185,9 @@
                 formData.append('logo', logo)
                 formData.append('minPlay', minPlay)
                 formData.append('maxPlay', maxPlay)
+                formData.append('boxChat', boxChat)
+                formData.append('accessToken', $('#accessToken').val().trim())
+                formData.append('signature', $('#signature').val().trim())
                 formData.append('maintenance', maintenance)
                 formData.append('notification', notifications)
 
@@ -173,6 +204,7 @@
                     },
                     success: res => {
                         const { errors, status } = res
+                        console.log(res);
                         if (status) {
                             Swal.fire({
                                 title: 'Thành công',
@@ -188,19 +220,22 @@
                             $('#errDescription').html(getMsg(errors, 'description'))
                             $('#errMinplay').html(getMsg(errors, 'minPlay'))
                             $('#errMaxPlay').html(getMsg(errors, 'maxPlay'))
+                            $('#errAccessToken').html(getMsg(errors, 'accessToken'))
+                            $('#errSignature').html(getMsg(errors, 'signature'))
                             $('#errNotication').html(getMsg(errors, 'notification'))
+                            $('#errBoxChat').html(getMsg(errors, 'boxChat'))
                         }
                     },
                     error: err => {
                         Swal.fire({
-                                title: 'Thất bại',
-                                text: 'Sửa thất bại',
-                                type: 'error',
-                                showConfirmButton: false,
-                                timer: 2000
-                            }).then(() => {
-                                location.reload()
-                            })
+                            title: 'Thất bại',
+                            text: 'Sửa thất bại',
+                            type: 'error',
+                            showConfirmButton: false,
+                            timer: 2000
+                        }).then(() => {
+                            location.reload()
+                        })
                     }
                 })
             })

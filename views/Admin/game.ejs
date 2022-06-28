@@ -1,0 +1,189 @@
+<%- include('header'); -%>
+    <!-- ============================================================== -->
+    <!-- Start right Content here -->
+    <!-- ============================================================== -->
+    <div class="main-content">
+        <div class="page-content">
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col-lg-12">
+                        <div id="resultData"></div>
+                        <div class="card">
+                            <div class="card-header">
+                                <h4 class="card-title mb-0">Game</h4>
+                            </div><!-- end card header -->
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col">
+                                        <label for="">Chẵn lẻ</label>
+                                        <input type="text" class="form-control" id="chanle" value="<%= game?.chanle %>">
+
+                                    </div>
+                                    <div class="col">
+                                        <label for="">Tài xỉu</label>
+                                        <input type="text" class="form-control" id="taixiu" value="<%= game?.taixiu %>">
+                                    </div>
+                                    <div class="col">
+                                        <label for="">Chẵn lẻ 2</label>
+                                        <input type="text" class="form-control" id="chanle2"
+                                            value="<%= game?.chanle2 %>">
+                                    </div>
+                                    <div class="col">
+                                        <label for="">Gấp 3</label>
+                                        <input type="text" class="form-control" id="gap3" value="<%= game?.gap3 %>">
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col">
+                                        <label for="">Tổng 3 số</label>
+                                        <input type="text" class="form-control" id="tong3so"
+                                            value="<%= game?.tong3so %>">
+                                    </div>
+                                    <div class="col">
+                                        <label for="">1 phần 3</label>
+                                        <input type="text" class="form-control" id="motphanba"
+                                            value="<%= game?.motphan3 %>">
+                                    </div>
+                                    <div class="col">
+                                        <label for="">Xiên</label>
+                                        <input type="text" class="form-control" id="xien" value="<%= game?.xien %>">
+                                    </div>
+                                    <div class="col">
+                                        <label for="">Đoán số</label>
+                                        <input type="text" class="form-control" id="doanso" value="<%= game?.doanso %>">
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col">
+                                        <label for="">Âm dương</label>
+                                        <input type="text" class="form-control" id="amduong" value="<%= game?.amduong %>">
+                                    </div>
+                                    <div class="col">
+                                        <label for="">Liên</label>
+                                        <input type="text" class="form-control" id="lien" value="<%= game?.lien %>">
+                                    </div>
+                                    <div class="col">
+                                        <label for="">1 đôi</label>
+                                        <input type="text" class="form-control" id="motdoi" value="<%= game?.motdoi %>">
+                                    </div>
+                                </div>
+                                <div class="row mt-3">
+                                    <button class="btn btn-primary btn-save">Lưu</button>
+                                </div>
+                            </div>
+                            <!-- end col -->
+                        </div>
+                        <!-- end row -->
+                    </div>
+                    <!-- container-fluid -->
+                </div>
+                <!-- End Page-content -->
+            </div>
+        </div>
+    </div>
+    </div>
+    <%- include('footer') %>
+        <script>
+
+            const getMsg = (data, param) => {
+                const msg = data.filter(item => {
+                    if (item.param == param) {
+                        return item.msg
+                    }
+                })
+                return msg.length > 0 ? msg[0].msg : ''
+            }
+
+
+            const showAlert = (msg, type) => {
+                return `<div class="alert alert-${type}" role="alert">
+                 <strong> ${msg} </strong>
+                </div>`
+            }
+
+            function getCookie(cname) {
+                let name = cname + "=";
+                let ca = document.cookie.split(';');
+                for (let i = 0; i < ca.length; i++) {
+                    let c = ca[i];
+                    while (c.charAt(0) == ' ') {
+                        c = c.substring(1);
+                    }
+                    if (c.indexOf(name) == 0) {
+                        return c.substring(name.length, c.length);
+                    }
+                }
+                return "";
+            }
+
+            $('.btn-save').click(e => {
+                e.preventDefault()
+                const token = $('meta[name="csrf-token"]').attr('content')
+                const chanle = $('#chanle').val()
+                const taixiu = $('#taixiu').val()
+                const chanle2 = $('#chanle2').val()
+                const gap3 = $('#gap3').val()
+                const tong3so = $('#tong3so').val()
+                const motphan3 = $('#motphanba').val()
+                const xien = $('#xien').val()
+                const doanso = $('#doanso').val()
+                const amduong = $('#amduong').val()
+                const lien = $('#lien').val()
+                const motdoi = $('#motdoi').val()
+                const data = {
+                    chanle,
+                    taixiu,
+                    chanle2,
+                    gap3,
+                    tong3so,
+                    motphan3,
+                    xien,
+                    doanso,
+                    amduong,
+                    lien,
+                    motdoi
+                }
+
+                $.ajax({
+                    url: '/admin/game',
+                    type: 'POST',
+                    data: data,
+                    headers: {
+                        'X-CSRF-TOKEN': token,
+                        'Authorization': 'Bearer ' + getCookie('token')
+                    },
+                    success: res => {
+                        const { errors, status } = res
+                        console.log(res);
+                        if (status) {
+                            Swal.fire({
+                                title: 'Thành công',
+                                text: 'Sửa thành công',
+                                showConfirmButton: false,
+                                timer: 2000
+                            }).then(() => {
+                                location.reload()
+                            })
+                        } else {
+                            Swal.fire({
+                                title: 'Thất bại',
+                                text: 'Dữ liệu không đầy đủ',
+                                showConfirmButton: false,
+                                timer: 2000
+                            })
+                        }
+                    },
+                    error: err => {
+                        Swal.fire({
+                            title: 'Thất bại',
+                            text: 'Sửa thất bại',
+                            type: 'error',
+                            showConfirmButton: false,
+                            timer: 2000
+                        }).then(() => {
+                            location.reload()
+                        })
+                    }
+                })
+            })
+        </script>

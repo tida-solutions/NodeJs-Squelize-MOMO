@@ -1,3 +1,5 @@
+import * as clipboard from 'https://cdn.jsdelivr.net/npm/clipboard-polyfill@4.0.0-rc1/dist/main/clipboard-polyfill.min.js'
+
 const socket = io('http://localhost:3000');
 
 socket.on("connect", () => {
@@ -11,15 +13,16 @@ socket.on("connect", () => {
 const token = $('meta[name="csrf-token"]').attr('content')
 
 $(document).ready(function () {
+
     $(document).on('click', '.fa-copy', function (e) {
         let copyText = $(e.target).prev();
-        navigator.clipboard.writeText(copyText.text());
         Swal.fire({
             icon: 'success',
             title: `Sao chép ${copyText.text()} thành công`,
             showConfirmButton: false,
             timer: 1500
         })
+
     });
 
     $('.notify button').click(() => {
@@ -166,7 +169,7 @@ $(document).ready(function () {
                     }
                 }
             }).then((result) => {
-                if(!result?.value.trim()) { 
+                if (!result?.value.trim()) {
                     return Swal.fire({
                         icon: 'error',
                         title: 'Vui lòng nhập tên của bạn',

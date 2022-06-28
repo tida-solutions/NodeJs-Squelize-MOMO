@@ -8,9 +8,10 @@ const moment = require("moment");
 const Setting = require("../models/index").Setting;
 const axios = require("axios");
 const Promise = require("bluebird");
-const { handelRefund, countToday, totalMonth, getListPhone,updatePhones } = require("../ultils/process.ultil");
+const { handelRefund, countToday, totalMonth, updatePhones, getSetting, getGame } = require("../ultils/process.ultil");
 const User = require("../models/index").User;
 const bcrypt = require('bcrypt');
+const GameModel = require("../models/index").Game;
 
 /**
  * View history play
@@ -62,11 +63,7 @@ const viewDashboard = async (req, res) => {
 };
 
 const viewSetting = async (req, res) => {
-  const setting = await Setting.findOne({
-    where: {
-      id: 1
-    }
-  });
+  const setting = await getSetting();
   return res.render("admin/setting", {
     csrfToken: req.csrfToken(),
     setting
@@ -113,7 +110,7 @@ const DayRevenue = async (date, type) => {
             Sequelize.fn("date", Sequelize.col("createdAt")),
             date
           ),
-          type: type === 'send' ? ["reward", "point"] : ["win", "lose"],
+          type: type === 'send' ? ["reward", "point", 'refund'] : ["win", "lose", "false"],
         },
       ]
     }
@@ -134,7 +131,7 @@ const MonthRevenue = async (date, type) => {
             Sequelize.fn("month", Sequelize.col("createdAt")),
             date
           ),
-          type: type === 'send' ? ["reward", "point"] : ["win", "lose"],
+          type: type === 'send' ? ["reward", "point", 'refund'] : ["win", "lose", "false"],
         },
       ],
     },
@@ -162,7 +159,7 @@ const getPrice = async (req, res) => {
 };
 
 /**
- * Setting
+ *Update setting
  */
 const setting = async (req, res) => {
   try {
@@ -175,25 +172,17 @@ const setting = async (req, res) => {
     }
 
     const dataRq = req.body;
-    const data = await Setting.findAll();
+    const data = await getSetting();
     delete dataRq.logo
-    if (data.length === 0) {
-      Setting.create({
-        logo: req.file?.filename || '',
-        ...dataRq,
+    Setting.update({
+      logo: req.file?.filename || data.logo,
+      ...dataRq,
+    },
+      {
+        where: {
+          maintenance: data.maintenance
+        }
       })
-    }
-    else {
-      Setting.update({
-        logo: req.file?.filename || data[0].logo,
-        ...dataRq,
-      },
-        {
-          where: {
-            id: 1
-          }
-        })
-    }
     return res.json({
       status: true,
       msg: 'Update success'
@@ -339,6 +328,43 @@ const changePassword = async (req, res) => {
   }
 }
 
+const viewGame = async (req, res) => {
+  const game = await getGame();
+  return res.render('admin/game', {
+    csrfToken: req.csrfToken(),
+    game
+  })
+}
+
+const updateGame = async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.json({
+        status: false,
+        errors: errors.array(),
+      });
+    }
+    const dataRq = req.body;
+    const game = await getGame();
+    GameModel.update({
+      ...dataRq,
+    },
+      {
+        where: {
+          chanle: game.chanle
+        }
+      })
+    return res.json({
+      status: true,
+      msg: 'Update success'
+    })
+  }
+  catch (error) {
+    console.log(error);
+  }
+}
+
 module.exports = {
   viewHistoryPlay,
   viewHistoryReward,
@@ -355,4 +381,6 @@ module.exports = {
   viewWithdraw,
   viewChangePassword,
   changePassword,
+  viewGame,
+  updateGame
 };

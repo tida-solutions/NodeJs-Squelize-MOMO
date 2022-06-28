@@ -2,12 +2,6 @@
 module.exports = {
   async up(queryInterface, Sequelize) {
     await queryInterface.createTable('Settings', {
-      id: {
-        allowNull: false,
-        autoIncrement: true,
-        primaryKey: true,
-        type: Sequelize.INTEGER
-      },
       title: {
         type: Sequelize.TEXT,
 
@@ -20,7 +14,10 @@ module.exports = {
       },
       maintenance: {
         type: Sequelize.STRING,
-        defaultValue: 'off'
+        defaultValue: 'false'
+      },
+      boxChat: {
+        type: Sequelize.STRING,
       },
       notification: {
         type: Sequelize.TEXT
@@ -32,6 +29,12 @@ module.exports = {
       maxPlay: {
         type: Sequelize.INTEGER,
         defaultValue: 100000
+      },
+      accessToken: {
+        type: Sequelize.STRING,
+      },
+      signature: {
+        type: Sequelize.STRING,
       },
       createdAt: {
         allowNull: false,
@@ -46,4 +49,4 @@ module.exports = {
   async down(queryInterface, Sequelize) {
     await queryInterface.dropTable('Settings');
   }
-};
+};  

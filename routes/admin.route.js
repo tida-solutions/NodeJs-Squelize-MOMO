@@ -12,7 +12,9 @@ const {
   refundTransFalse,
   viewWithdraw,
   viewChangePassword,
-  changePassword
+  changePassword,
+  viewGame,
+  updateGame
 } = require("../controllers/admin.controller");
 const passport = require("passport");
 require("../middlewares/authorization.middleware");
@@ -21,6 +23,7 @@ const csrfProtection = csrf({ cookie: true });
 const settingValidate = require("../validations/setting.validate");
 const checkLogin = require("../middlewares/checkLogin.middleware");
 const authValidate = require("../validations/auth.validate");
+const gameValidate = require("../validations/game.validate");
 const { signin } = require('../controllers/auth.controller')
 const multer = require("multer");
 const storage = multer.diskStorage({
@@ -84,6 +87,10 @@ Router.post("/phone", csrfProtection, actionPhone)
 Router.post("/setting", passport.authenticate('jwt', { session: false }), upload.single('logo'), csrfProtection, settingValidate(), setting)
 
 Router.post("/refund", passport.authenticate('jwt', { session: false }), csrfProtection, refundTransFalse)
+
+Router.get('/game', checkLogin, csrfProtection, viewGame)
+
+Router.post('/game', passport.authenticate('jwt', { session: false }), csrfProtection,gameValidate(), updateGame)
 
 Router.get('/withdraw', checkLogin, csrfProtection, viewWithdraw)
 
