@@ -3,7 +3,6 @@ require("./cron");
 const express = require("express");
 const app = express();
 const bodyParser = require("body-parser");
-const helmet = require("helmet");
 const connectDB = require("./config/connect");
 const cookieParser = require("cookie-parser");
 const rateLimit = require("express-rate-limit");
@@ -36,6 +35,7 @@ app.use('/uploads', express.static("uploads"));
 app.use(cookieParser());
 app.set("view engine", "ejs");
 connectDB();
+
 
 /**
  * Rate limit request

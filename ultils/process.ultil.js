@@ -311,7 +311,6 @@ const getDataTranId = async (tranId) => {
   }
 
   const res = await axios.post(apiUrl, data)
-  console.log(res);
   return res.data.data
 }
 
@@ -438,7 +437,6 @@ const checkPhonePointListToday = async () => {
             amount: isCheck[0].gift,
             note: `${isCheck[0].gift} | Point List`,
           };
-          console.log(1);
           axios.post(apiUrl, dataSend)
         }
       }
@@ -515,10 +513,10 @@ const countToday = async (phone, type) => {
       [Sequelize.fn("sum", Sequelize.col("amount")), "totalAmount"],
       [Sequelize.fn("count", Sequelize.col("id")), "totalCount"]],
     where: {
-      // [Sequelize.Op.and]: Sequelize.where(
-      //   Sequelize.fn("date", Sequelize.col("createdAt")),
-      //   getCurrentDate()
-      // ),
+      [Sequelize.Op.and]: Sequelize.where(
+        Sequelize.fn("date", Sequelize.col("createdAt")),
+        getCurrentDate()
+      ),
       type: type === 'send' ? ["reward", "point", 'refund'] : ["win", "lose"],
       [type === 'send' ? 'transferPhone' : 'receivingPhone']: phone
     }
@@ -526,10 +524,6 @@ const countToday = async (phone, type) => {
   return data[0].dataValues
 }
 
-countToday('0766667020', 'receiver').then(res => {
-  console.log(res);
-});
- 
 /**
  * Reward introduce
  */
@@ -604,7 +598,7 @@ const getGame = async () => {
   const data = await GameModel.findOne({
     attributes: [`chanle`, `chanle2`, `taixiu`, `gap3`, `tong3so`, `motphan3`, `xien`, `doanso`, `amduong`, `lien`, `motdoi`]
   });
-  return data.dataValues;
+  return data;
 }
 
 module.exports = {
